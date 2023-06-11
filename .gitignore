@@ -1,0 +1,5 @@
+/.env
+/.idea
+database.sqlite3
+
+QueueBot

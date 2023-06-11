@@ -1,21 +1,17 @@
 package storage
 
-type Queue struct {
-	description string
-}
-
-func NewQueue(description string) *Queue {
-	return &Queue{description: description}
-}
-
-type User struct {
-	id   int64
-	name string
-}
+import (
+	"QueueBot/storage/user"
+	"QueueBot/telegram/steps"
+)
 
 type Storage interface {
-	GetUsersInQueue(queueId string) ([]User, error)
-	AddUserToQueue(queueId string, user User) error
-	DeleteUserFromQueueById(queueId string, userId int64) error
-	CreateQueue(queryID string, description string) error
+	GetUsersInQueue(messageId int) ([]user.User, error)
+	AddUserToQueue(messageId int, user user.User) error
+	DeleteUserFromQueueById(messageId int, userId int64) error
+	CreateQueue(messageId int, description string) error
+	SetUserCurrentStep(userId int64, currentStep steps.Step) error
+	CreateUser(userId int64) error
+	GetUserCurrentStep(userId int64) (steps.Step, error)
+	GetDescriptionOfQueue(messageId int) (string, error)
 }
