@@ -19,8 +19,8 @@ func GetQueueMessage(description string) tgbotapi.InputTextMessageContent {
 	return answer
 }
 
-func GetUpdatedQueueMessage(messageID string, description string, users []user.User, isUserInQueue bool) tgbotapi.EditMessageTextConfig {
-	keyboard := GetKeyboardButtons(isUserInQueue)
+func GetUpdatedQueueMessage(messageID string, description string, users []user.User) tgbotapi.EditMessageTextConfig {
+	keyboard := GetKeyboard()
 	answer := tgbotapi.EditMessageTextConfig{
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: messageID,
@@ -35,7 +35,7 @@ func GetUpdatedQueueMessage(messageID string, description string, users []user.U
 func GetForwardMessage(chatId int64, description string) tgbotapi.MessageConfig {
 	answer := tgbotapi.NewMessage(chatId, constants.ForwardQueueToMessage)
 	answer.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonSwitch(constants.ForwardQueueTo, description),
+		tgbotapi.NewInlineKeyboardButtonSwitch(constants.ForwardQueueButton, description),
 	))
 	answer.ParseMode = tgbotapi.ModeMarkdown
 	return answer

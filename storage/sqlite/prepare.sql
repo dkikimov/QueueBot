@@ -32,3 +32,6 @@ SELECT user_id, user_name FROM participants WHERE message_id = 1;
 -- Delete participant from queue
 -- EXPLAIN QUERY PLAN
 DELETE FROM participants WHERE message_id = 1 AND user_id = 1;
+
+-- Count
+SELECT COUNT(*) FROM participants WHERE user_id = 1;

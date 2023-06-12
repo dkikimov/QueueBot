@@ -27,7 +27,12 @@ CREATE TABLE IF NOT EXISTS users(
 const CreateQueue = `INSERT INTO queues (message_id, description) VALUES (?, ?);`
 const CreateUser = `INSERT OR IGNORE INTO users VALUES (?, 0);`
 const SetUserCurrentStep = `UPDATE users SET current_step = ? WHERE id = ?`
+
 const AddUserToQueue = `INSERT INTO participants VALUES (?, ?, ?)`
+const RemoveUserFromQueue = `DELETE FROM participants WHERE user_id = ? AND message_id = ?`
+
 const GetUserCurrentStep = `SELECT current_step FROM users WHERE id = ?`
 const GetUsersInQueue = `SELECT user_id, user_name FROM participants WHERE message_id = ?`
 const GetDescriptionOfQueue = `SELECT description FROM queues WHERE message_id = ?`
+
+const CountMatchesInParticipants = `SELECT COUNT(*) FROM participants WHERE user_id = ? AND message_id = ?;`

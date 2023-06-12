@@ -39,7 +39,7 @@ func main() {
 		case update.InlineQuery != nil:
 			telegram.HandleInlineQuery(update.InlineQuery, bot, storage)
 		case update.ChosenInlineResult != nil:
-			telegram.HandleChosenInlineResult(update.ChosenInlineResult, bot, storage)
+			telegram.HandleChosenInlineResult(update.ChosenInlineResult, storage)
 		}
 
 	}

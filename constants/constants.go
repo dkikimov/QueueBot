@@ -15,7 +15,7 @@ const QueueDescription = "В очереди состоят:"
 
 // Alert messages
 
-const AddedToQueueAlert = "Вы добавлены в очередь!"
+const LogInOurOutAlert = "Действие выполнено!"
 
 // Inline query
 
@@ -23,11 +23,9 @@ const CreateQueue = "Создать очередь"
 
 // Keyboard
 
-const AddToQueueButton = "Добавиться в очередь"
-const ExitFromQueueButton = "Выйти из очереди"
-const ForwardQueueTo = "Переслать 'очередь'"
+const LogInOurOutButton = "Добавиться/выйти из очереди"
+const ForwardQueueButton = "Переслать 'очередь'"
 
 // Buttons data
 
-const AddToQueueData = "add_to_queue"
-const ExitFromQueueData = "exit_from_queue"
+const LogInOurOutData = "log_in_our_out"

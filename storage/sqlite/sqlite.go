@@ -10,19 +10,40 @@ import (
 )
 
 type Commands struct {
-	createQueueStmt           *sql.Stmt
-	createUserStmt            *sql.Stmt
-	setUserCurrentStepStmt    *sql.Stmt
-	getUserCurrentStepStmt    *sql.Stmt
-	getUsersInQueueStmt       *sql.Stmt
-	getDescriptionOfQueueStmt *sql.Stmt
-	addUserToQueueStmt        *sql.Stmt
+	createQueueStmt                *sql.Stmt
+	createUserStmt                 *sql.Stmt
+	setUserCurrentStepStmt         *sql.Stmt
+	getUserCurrentStepStmt         *sql.Stmt
+	getUsersInQueueStmt            *sql.Stmt
+	getDescriptionOfQueueStmt      *sql.Stmt
+	addUserToQueueStmt             *sql.Stmt
+	removeUserFromQueueStmt        *sql.Stmt
+	countMatchesInParticipantsStmt *sql.Stmt
 }
 
 type SQLite struct {
 	db       *sql.DB
 	mu       sync.Mutex
 	commands Commands
+}
+
+func (sqlite *SQLite) LogInOurOutQueue(messageId string, user user.User) (err error) {
+	row := sqlite.commands.countMatchesInParticipantsStmt.QueryRow(user.Id, messageId)
+
+	var count int
+	if err = row.Scan(&count); err != nil {
+		return err
+	}
+
+	if count == 1 {
+		_, err = sqlite.commands.removeUserFromQueueStmt.Exec(user.Id, messageId)
+		logger.Printf("Removed user with id %s", user.Id)
+	} else {
+		_, err = sqlite.commands.addUserToQueueStmt.Exec(messageId, user.Id, user.Name)
+		logger.Printf("Added user user with id %s", user.Id)
+
+	}
+	return err
 }
 
 func (sqlite *SQLite) GetDescriptionOfQueue(messageId string) (description string, err error) {
@@ -71,11 +92,6 @@ func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
 	}
 
 	return users, err
-}
-
-func (sqlite *SQLite) AddUserToQueue(messageId string, user user.User) error {
-	_, err := sqlite.commands.addUserToQueueStmt.Exec(messageId, user.Id, user.Name)
-	return err
 }
 
 func (sqlite *SQLite) DeleteUserFromQueueById(messageId string, userId int64) error {
@@ -140,13 +156,25 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare add user to queue command with error: %s", err.Error())
 	}
 
+	countMatchesInParticipantsStmt, err := db.Prepare(CountMatchesInParticipants)
+	if err != nil {
+		logger.Panicf("Couldn't prepare count matches in participants command with error: %s", err.Error())
+	}
+
+	removeUserFromQueueStmt, err := db.Prepare(RemoveUserFromQueue)
+	if err != nil {
+		logger.Panicf("Couldn't prepare remove user from queue command with error: %s", err.Error())
+	}
+
 	return Commands{
-		createQueueStmt:           createQueueStmt,
-		createUserStmt:            createUserStmt,
-		setUserCurrentStepStmt:    setUserCurrentStepStmt,
-		getUserCurrentStepStmt:    getUserCurrentStepStmt,
-		getUsersInQueueStmt:       getUsersInQueueStmt,
-		getDescriptionOfQueueStmt: getDescriptionOfQueueStmt,
-		addUserToQueueStmt:        addUserToQueueStmt,
+		createQueueStmt:                createQueueStmt,
+		createUserStmt:                 createUserStmt,
+		setUserCurrentStepStmt:         setUserCurrentStepStmt,
+		getUserCurrentStepStmt:         getUserCurrentStepStmt,
+		getUsersInQueueStmt:            getUsersInQueueStmt,
+		getDescriptionOfQueueStmt:      getDescriptionOfQueueStmt,
+		addUserToQueueStmt:             addUserToQueueStmt,
+		countMatchesInParticipantsStmt: countMatchesInParticipantsStmt,
+		removeUserFromQueueStmt:        removeUserFromQueueStmt,
 	}
 }

@@ -37,20 +37,21 @@ func HandleMessage(update *tgbotapi.Update, bot *tgbotapi.BotAPI, storage storag
 
 func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
 	switch callbackQuery.Data {
-	case constants.AddToQueueData:
-		queue.AddTo(callbackQuery, bot, storage)
+	case constants.LogInOurOutData:
+		queue.LogInOurOut(callbackQuery, bot, storage)
 	}
 }
 
-func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, bot *tgbotapi.BotAPI, storage storage.Storage) {
-	queue.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query, bot, storage)
+func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, storage storage.Storage) {
+	//TODO: Middleware for query
+	queue.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query, storage)
 }
 
 func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, constants.CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
 	article.InputMessageContent = queue.GetQueueMessage(inlineQuery.Query)
 
-	keyboard := queue.GetKeyboardButtons(false)
+	keyboard := queue.GetKeyboard()
 	article.ReplyMarkup = &keyboard
 
 	inlineConf := tgbotapi.InlineConfig{
