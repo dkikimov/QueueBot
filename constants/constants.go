@@ -17,6 +17,10 @@ const QueueDescription = "В очереди состоят:"
 
 const AddedToQueueAlert = "Вы добавлены в очередь!"
 
+// Inline query
+
+const CreateQueue = "Создать очередь"
+
 // Keyboard
 
 const AddToQueueButton = "Добавиться в очередь"

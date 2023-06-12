@@ -25,7 +25,7 @@ type SQLite struct {
 	commands Commands
 }
 
-func (sqlite *SQLite) GetDescriptionOfQueue(messageId int) (description string, err error) {
+func (sqlite *SQLite) GetDescriptionOfQueue(messageId string) (description string, err error) {
 	result := sqlite.commands.getDescriptionOfQueueStmt.QueryRow(messageId)
 	if err = result.Scan(&description); err != nil {
 		return "", err
@@ -51,7 +51,7 @@ func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.Step) e
 	return err
 }
 
-func (sqlite *SQLite) GetUsersInQueue(messageId int) ([]user.User, error) {
+func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
 	rows, err := sqlite.commands.getUsersInQueueStmt.Query(messageId)
 	if err != nil {
 		return nil, err
@@ -73,17 +73,17 @@ func (sqlite *SQLite) GetUsersInQueue(messageId int) ([]user.User, error) {
 	return users, err
 }
 
-func (sqlite *SQLite) AddUserToQueue(messageId int, user user.User) error {
+func (sqlite *SQLite) AddUserToQueue(messageId string, user user.User) error {
 	_, err := sqlite.commands.addUserToQueueStmt.Exec(messageId, user.Id, user.Name)
 	return err
 }
 
-func (sqlite *SQLite) DeleteUserFromQueueById(messageId int, userId int64) error {
+func (sqlite *SQLite) DeleteUserFromQueueById(messageId string, userId int64) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (sqlite *SQLite) CreateQueue(messageId int, description string) error {
+func (sqlite *SQLite) CreateQueue(messageId string, description string) error {
 	_, err := sqlite.commands.createQueueStmt.Exec(messageId, description)
 	return err
 }
