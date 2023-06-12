@@ -25,3 +25,12 @@ func GetUpdatedQueueMessage(chatID int64, messageID int, description string, use
 	answer.ParseMode = tgbotapi.ModeMarkdown
 	return answer
 }
+
+func GetForwardMessage(chatId int64, description string) tgbotapi.MessageConfig {
+	answer := tgbotapi.NewMessage(chatId, constants.ForwardQueueToMessage)
+	answer.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonSwitch(constants.ForwardQueueTo, description),
+	))
+	answer.ParseMode = tgbotapi.ModeMarkdown
+	return answer
+}

@@ -29,7 +29,8 @@ func HandleMessage(update *tgbotapi.Update, bot *tgbotapi.BotAPI, storage storag
 		SendHelloMessage(update.Message, bot, storage)
 		break
 	case steps.EnteringDescription:
-		queue.Create(update.Message, bot, storage)
+		SendForwardToMessage(update.Message, bot)
+		break
 	}
 }
 
