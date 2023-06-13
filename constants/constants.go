@@ -13,6 +13,8 @@ const ForwardQueueToMessage = "Отлично! Теперь с помощью к
 
 const QueueDescription = "В очереди состоят:"
 
+const EndedQueue = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
+
 // Alert messages
 
 const LogInOurOutAlert = "Действие выполнено!"
@@ -25,7 +27,16 @@ const CreateQueue = "Создать очередь"
 
 const LogInOurOutButton = "Добавиться/выйти из очереди"
 const ForwardQueueButton = "Переслать 'очередь'"
+const StartQueueButton = "Старт"
+
+const NextButton = "Следующий"
+const GoToMenuButton = "Перейти в меню"
+const FinishQueueButton = "Закончить"
 
 // Buttons data
 
 const LogInOurOutData = "log_in_our_out"
+const StartQueueData = "start_queue"
+const NextData = "next_user"
+const GoToMenuData = "go_to_menu"
+const FinishQueueData = "end_queue"

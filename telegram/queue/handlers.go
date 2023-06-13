@@ -4,7 +4,8 @@ import (
 	"QueueBot/constants"
 	"QueueBot/logger"
 	"QueueBot/storage"
-	"QueueBot/storage/user"
+	"QueueBot/ui"
+	"QueueBot/user"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -32,7 +33,7 @@ func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, st
 		logger.Fatalf("Couldn't get users in queue with error: %s", err.Error())
 	}
 
-	updatedMessage := GetUpdatedQueueMessage(callbackQuery.InlineMessageID, description, users)
+	updatedMessage := ui.GetUpdatedQueueMessage(callbackQuery.InlineMessageID, description, users)
 
 	_, err = bot.Request(updatedMessage)
 	if err != nil {
@@ -42,5 +43,55 @@ func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, st
 	callback := tgbotapi.NewCallback(callbackQuery.ID, constants.LogInOurOutAlert)
 	if _, err = bot.Request(callback); err != nil {
 		logger.Panicf("Couldn't process callback with error: %s", err.Error())
+	}
+}
+
+func Start(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+	err, wasUpdated := storage.StartQueue(callbackQuery.InlineMessageID)
+	if err != nil {
+		logger.Fatalf("Couldn't start queue with error: %s", err.Error())
+	}
+
+	if !wasUpdated {
+		return
+	}
+
+	sendQueueAfterStartMessage(callbackQuery, bot, storage, 0)
+}
+
+func Next(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+	err, currentPersonIndex := storage.IncrementCurrentPerson(callbackQuery.InlineMessageID)
+	if err != nil {
+		logger.Fatalf("Couldn't increment current person in queue %s with error: %s", callbackQuery.InlineMessageID, err.Error())
+	}
+	sendQueueAfterStartMessage(callbackQuery, bot, storage, currentPersonIndex)
+}
+
+func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, currentPersonIndex int) {
+	description, err := storage.GetDescriptionOfQueue(callbackQuery.InlineMessageID)
+	if err != nil {
+		logger.Fatalf("Couldn't get description of queue with error: %s", err.Error())
+	}
+
+	users, err := storage.GetUsersInQueue(callbackQuery.InlineMessageID)
+	if err != nil {
+		logger.Fatalf("Couldn't get users in queue with error: %s", err.Error())
+	}
+
+	var updatedMessage tgbotapi.EditMessageTextConfig
+	if currentPersonIndex == len(users) {
+		updatedMessage = ui.GetEndQueueMessage(callbackQuery.InlineMessageID)
+	} else {
+		updatedMessage = ui.GetQueueAfterStartMessage(callbackQuery.InlineMessageID, description, users, currentPersonIndex)
+	}
+
+	_, err = bot.Request(updatedMessage)
+	if err != nil {
+		logger.Fatalf("Couldn't update message after starting queue with error: %s", err.Error())
+	}
+
+	callback := tgbotapi.NewCallback(callbackQuery.ID, constants.NextData)
+	if _, err = bot.Request(callback); err != nil {
+		logger.Panicf("Couldn't process next_data callback with error: %s", err.Error())
 	}
 }

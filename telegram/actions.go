@@ -4,8 +4,8 @@ import (
 	"QueueBot/constants"
 	"QueueBot/logger"
 	"QueueBot/storage"
-	"QueueBot/telegram/queue"
 	"QueueBot/telegram/steps"
+	"QueueBot/ui"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
@@ -32,7 +32,7 @@ func SendMessageToCreateQueue(message *tgbotapi.Message, bot *tgbotapi.BotAPI, s
 }
 
 func SendForwardToMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI) {
-	msg := queue.GetForwardMessage(message.Chat.ID, message.Text)
+	msg := ui.GetForwardMessage(message.Chat.ID, message.Text)
 	if _, err := bot.Send(msg); err != nil {
 		logger.Fatalf("Couldn't send forward to message with error: %s", err.Error())
 	}

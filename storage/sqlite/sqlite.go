@@ -2,23 +2,25 @@ package sqlite
 
 import (
 	"QueueBot/logger"
-	"QueueBot/storage/user"
 	"QueueBot/telegram/steps"
+	"QueueBot/user"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
 	"sync"
 )
 
 type Commands struct {
-	createQueueStmt                *sql.Stmt
-	createUserStmt                 *sql.Stmt
-	setUserCurrentStepStmt         *sql.Stmt
-	getUserCurrentStepStmt         *sql.Stmt
-	getUsersInQueueStmt            *sql.Stmt
-	getDescriptionOfQueueStmt      *sql.Stmt
-	addUserToQueueStmt             *sql.Stmt
-	removeUserFromQueueStmt        *sql.Stmt
-	countMatchesInParticipantsStmt *sql.Stmt
+	createQueueStmt,
+	createUserStmt,
+	setUserCurrentStepStmt,
+	getUserCurrentStepStmt,
+	getUsersInQueueStmt,
+	getDescriptionOfQueueStmt,
+	addUserToQueueStmt,
+	removeUserFromQueueStmt,
+	countMatchesInParticipantsStmt,
+	startQueueStmt,
+	incCurrentPersonStmt *sql.Stmt
 }
 
 type SQLite struct {
@@ -27,9 +29,27 @@ type SQLite struct {
 	commands Commands
 }
 
+func (sqlite *SQLite) IncrementCurrentPerson(messageId string) (err error, currentPerson int) {
+	row := sqlite.commands.incCurrentPersonStmt.QueryRow(messageId)
+	if err = row.Scan(&currentPerson); err != nil {
+		return err, 0
+	}
+
+	return err, currentPerson
+}
+
+func (sqlite *SQLite) StartQueue(messageId string) (error, bool) {
+	row := sqlite.commands.startQueueStmt.QueryRow(messageId)
+	var wasUpdated int
+	if err := row.Scan(&wasUpdated); err != nil {
+		return err, false
+	}
+
+	return nil, wasUpdated == 1
+}
+
 func (sqlite *SQLite) LogInOurOutQueue(messageId string, user user.User) (err error) {
 	row := sqlite.commands.countMatchesInParticipantsStmt.QueryRow(user.Id, messageId)
-
 	var count int
 	if err = row.Scan(&count); err != nil {
 		return err
@@ -77,6 +97,8 @@ func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	//TODO: handle error
+	defer rows.Close()
 
 	var users []user.User
 	for rows.Next() {
@@ -94,18 +116,15 @@ func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
 	return users, err
 }
 
-func (sqlite *SQLite) DeleteUserFromQueueById(messageId string, userId int64) error {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (sqlite *SQLite) CreateQueue(messageId string, description string) error {
 	_, err := sqlite.commands.createQueueStmt.Exec(messageId, description)
 	return err
 }
 
 func NewDatabase() *SQLite {
-	db, err := sql.Open("sqlite3", "./database.sqlite3")
+	//db, err := sql.Open("sqlite3", "file:./database.sqlite3:memory:?cache=shared")
+	db, err := sql.Open("sqlite3", "./database.sqlite3?cache=shared")
+
 	if err != nil {
 		logger.Panicf("Couldn't open database with error %s", err.Error())
 	}
@@ -166,6 +185,16 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare remove user from queue command with error: %s", err.Error())
 	}
 
+	startQueueStmt, err := db.Prepare(StartQueue)
+	if err != nil {
+		logger.Panicf("Couldn't prepare start queue command with error: %s", err.Error())
+	}
+
+	incCurrentPersonStmt, err := db.Prepare(IncrementCurrentPerson)
+	if err != nil {
+		logger.Panicf("Couldn't prepare increment current person command with error: %s", err.Error())
+	}
+
 	return Commands{
 		createQueueStmt:                createQueueStmt,
 		createUserStmt:                 createUserStmt,
@@ -176,5 +205,7 @@ func getPreparedCommands(db *sql.DB) Commands {
 		addUserToQueueStmt:             addUserToQueueStmt,
 		countMatchesInParticipantsStmt: countMatchesInParticipantsStmt,
 		removeUserFromQueueStmt:        removeUserFromQueueStmt,
+		startQueueStmt:                 startQueueStmt,
+		incCurrentPersonStmt:           incCurrentPersonStmt,
 	}
 }
