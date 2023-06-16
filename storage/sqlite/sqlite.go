@@ -20,13 +20,19 @@ type Commands struct {
 	removeUserFromQueueStmt,
 	countMatchesInParticipantsStmt,
 	startQueueStmt,
-	incCurrentPersonStmt *sql.Stmt
+	incCurrentPersonStmt,
+	goToMenuStmt *sql.Stmt
 }
 
 type SQLite struct {
 	db       *sql.DB
 	mu       sync.Mutex
 	commands Commands
+}
+
+func (sqlite *SQLite) GoToMenu(messageId string) error {
+	_, err := sqlite.commands.goToMenuStmt.Exec(messageId)
+	return err
 }
 
 func (sqlite *SQLite) IncrementCurrentPerson(messageId string) (err error, currentPerson int) {
@@ -195,6 +201,11 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare increment current person command with error: %s", err.Error())
 	}
 
+	resetCurrentPersonStmt, err := db.Prepare(GoToMenu)
+	if err != nil {
+		logger.Panicf("Couldn't prepare reset current person command with error: %s", err.Error())
+	}
+
 	return Commands{
 		createQueueStmt:                createQueueStmt,
 		createUserStmt:                 createUserStmt,
@@ -207,5 +218,6 @@ func getPreparedCommands(db *sql.DB) Commands {
 		removeUserFromQueueStmt:        removeUserFromQueueStmt,
 		startQueueStmt:                 startQueueStmt,
 		incCurrentPersonStmt:           incCurrentPersonStmt,
+		goToMenuStmt:                   resetCurrentPersonStmt,
 	}
 }

@@ -15,9 +15,22 @@ func getMessageContentAfterStart(title string, users []user.User, currentPersonI
 	return fmt.Sprintf("*%s*\n%s\n%s", title, constants.QueueDescription, user.ListToStringWithCurrent(users, currentPersonIndex))
 }
 
-func GetQueueMessage(description string) tgbotapi.InputTextMessageContent {
+func GetQueueMessageContent(description string) tgbotapi.InputTextMessageContent {
 	answer := tgbotapi.InputTextMessageContent{
 		Text:      getMessageContentBeforeStart(description, nil),
+		ParseMode: tgbotapi.ModeMarkdown,
+	}
+	return answer
+}
+
+func GetQueueMessage(messageID string, users []user.User, description string) tgbotapi.EditMessageTextConfig {
+	keyboard := GetBeforeStartKeyboard()
+	answer := tgbotapi.EditMessageTextConfig{
+		BaseEdit: tgbotapi.BaseEdit{
+			InlineMessageID: messageID,
+			ReplyMarkup:     &keyboard,
+		},
+		Text:      getMessageContentBeforeStart(description, users),
 		ParseMode: tgbotapi.ModeMarkdown,
 	}
 	return answer

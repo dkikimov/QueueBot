@@ -16,4 +16,5 @@ type Storage interface {
 
 	StartQueue(messageId string) (err error, wasUpdated bool)
 	IncrementCurrentPerson(messageId string) (err error, currentPerson int)
+	GoToMenu(messageId string) error
 }

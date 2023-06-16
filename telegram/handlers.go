@@ -44,6 +44,8 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 		queue.Start(callbackQuery, bot, storage)
 	case constants.NextData:
 		queue.Next(callbackQuery, bot, storage)
+	case constants.GoToMenuData:
+		queue.GoToMenu(callbackQuery, bot, storage)
 	}
 }
 
@@ -54,7 +56,7 @@ func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, s
 
 func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, constants.CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
-	article.InputMessageContent = ui.GetQueueMessage(inlineQuery.Query)
+	article.InputMessageContent = ui.GetQueueMessageContent(inlineQuery.Query)
 
 	keyboard := ui.GetBeforeStartKeyboard()
 	article.ReplyMarkup = &keyboard

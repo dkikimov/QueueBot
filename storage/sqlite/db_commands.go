@@ -39,4 +39,6 @@ const GetDescriptionOfQueue = `SELECT description FROM queues WHERE message_id =
 
 const CountMatchesInParticipants = `SELECT COUNT(*) FROM participants WHERE user_id = ? AND message_id = ?;`
 const StartQueue = `UPDATE queues SET is_started = 1 WHERE message_id = ? AND is_started = 0 RETURNING is_started`
+
 const IncrementCurrentPerson = `UPDATE queues SET current_person = current_person + 1 WHERE message_id = ? RETURNING current_person`
+const GoToMenu = `UPDATE queues SET current_person = 0, is_started = 0 WHERE message_id = ?; `
