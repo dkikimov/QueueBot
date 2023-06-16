@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS queues(
 	description TEXT DEFAULT NULL,
 	is_ended INTEGER DEFAULT 0,
 	is_started INTEGER DEFAULT 0,
+	is_shuffled INTEGER DEFAULT 0,
 	current_person INTEGER DEFAULT 0
 	);
 
@@ -35,10 +36,14 @@ const RemoveUserFromQueue = `DELETE FROM participants WHERE user_id = ? AND mess
 const GetUserCurrentStep = `SELECT current_step FROM users WHERE id = ?`
 
 const GetUsersInQueue = `SELECT user_id, user_name FROM participants WHERE message_id = ?`
+const GetUsersInQueueShuffled = `SELECT user_id, user_name FROM participants WHERE message_id = ? ORDER BY order_number`
+
 const GetDescriptionOfQueue = `SELECT description FROM queues WHERE message_id = ?`
 
 const CountMatchesInParticipants = `SELECT COUNT(*) FROM participants WHERE user_id = ? AND message_id = ?;`
-const StartQueue = `UPDATE queues SET is_started = 1 WHERE message_id = ? AND is_started = 0 RETURNING is_started`
+const StartQueue = `UPDATE queues SET is_started = 1, is_shuffled = ? WHERE message_id = ? AND is_started = 0 RETURNING is_started`
 
 const IncrementCurrentPerson = `UPDATE queues SET current_person = current_person + 1 WHERE message_id = ? RETURNING current_person`
 const GoToMenu = `UPDATE queues SET current_person = 0, is_started = 0 WHERE message_id = ?; `
+
+const IsQueueShuffled = `SELECT is_shuffled FROM queues WHERE message_id = ?; `

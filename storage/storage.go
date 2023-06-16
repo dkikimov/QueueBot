@@ -14,7 +14,7 @@ type Storage interface {
 	GetDescriptionOfQueue(messageId string) (string, error)
 	LogInOurOutQueue(messageId string, user user.User) error
 
-	StartQueue(messageId string) (err error, wasUpdated bool)
+	StartQueue(messageId string, isShuffle bool) (err error, wasUpdated bool)
 	IncrementCurrentPerson(messageId string) (err error, currentPerson int)
 	GoToMenu(messageId string) error
 }

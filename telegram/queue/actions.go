@@ -46,8 +46,8 @@ func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, st
 	}
 }
 
-func Start(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
-	err, wasUpdated := storage.StartQueue(callbackQuery.InlineMessageID)
+func Start(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, isShuffled bool) {
+	err, wasUpdated := storage.StartQueue(callbackQuery.InlineMessageID, isShuffled)
 	if err != nil {
 		logger.Fatalf("Couldn't start queue with error: %s", err.Error())
 	}

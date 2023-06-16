@@ -13,6 +13,9 @@ func GetBeforeStartKeyboard() tgbotapi.InlineKeyboardMarkup {
 		tgbotapi.NewInlineKeyboardRow(
 			startQueueButton(),
 		),
+		tgbotapi.NewInlineKeyboardRow(
+			startQueueShuffleButton(),
+		),
 	)
 
 	return keyboard
@@ -47,6 +50,10 @@ func logInOurOutQueueButton() tgbotapi.InlineKeyboardButton {
 
 func startQueueButton() tgbotapi.InlineKeyboardButton {
 	return tgbotapi.NewInlineKeyboardButtonData(constants.StartQueueButton, constants.StartQueueData)
+}
+
+func startQueueShuffleButton() tgbotapi.InlineKeyboardButton {
+	return tgbotapi.NewInlineKeyboardButtonData(constants.StartQueueShuffleButton, constants.StartQueueShuffleData)
 }
 
 func nextButton() tgbotapi.InlineKeyboardButton {

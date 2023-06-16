@@ -28,7 +28,9 @@ const CreateQueue = "Создать очередь"
 
 const LogInOurOutButton = "Добавиться/выйти из очереди"
 const ForwardQueueButton = "Переслать 'очередь'"
-const StartQueueButton = "Старт"
+
+const StartQueueButton = "Старт в порядке очереди"
+const StartQueueShuffleButton = "Старт в случайном порядке"
 
 const NextButton = "Следующий"
 const GoToMenuButton = "Перейти в меню"
@@ -38,6 +40,7 @@ const FinishQueueButton = "Закончить"
 
 const LogInOurOutData = "log_in_our_out"
 const StartQueueData = "start_queue"
+const StartQueueShuffleData = "start_queue_shuffle"
 const NextData = "next_user"
 const GoToMenuData = "go_to_menu"
 const FinishQueueData = "finish_queue"

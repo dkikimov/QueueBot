@@ -15,12 +15,14 @@ type Commands struct {
 	setUserCurrentStepStmt,
 	getUserCurrentStepStmt,
 	getUsersInQueueStmt,
+	getUsersInQueueShuffledStmt,
 	getDescriptionOfQueueStmt,
 	addUserToQueueStmt,
 	removeUserFromQueueStmt,
 	countMatchesInParticipantsStmt,
 	startQueueStmt,
 	incCurrentPersonStmt,
+	isQueueShuffledStmt,
 	goToMenuStmt *sql.Stmt
 }
 
@@ -28,6 +30,16 @@ type SQLite struct {
 	db       *sql.DB
 	mu       sync.Mutex
 	commands Commands
+}
+
+func (sqlite *SQLite) StartQueue(messageId string, isShuffle bool) (error, bool) {
+	row := sqlite.commands.startQueueStmt.QueryRow(isShuffle, messageId)
+	var wasUpdated int
+	if err := row.Scan(&wasUpdated); err != nil {
+		return err, false
+	}
+
+	return nil, wasUpdated == 1
 }
 
 func (sqlite *SQLite) GoToMenu(messageId string) error {
@@ -42,16 +54,6 @@ func (sqlite *SQLite) IncrementCurrentPerson(messageId string) (err error, curre
 	}
 
 	return err, currentPerson
-}
-
-func (sqlite *SQLite) StartQueue(messageId string) (error, bool) {
-	row := sqlite.commands.startQueueStmt.QueryRow(messageId)
-	var wasUpdated int
-	if err := row.Scan(&wasUpdated); err != nil {
-		return err, false
-	}
-
-	return nil, wasUpdated == 1
 }
 
 func (sqlite *SQLite) LogInOurOutQueue(messageId string, user user.User) (err error) {
@@ -99,7 +101,21 @@ func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.Step) e
 }
 
 func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
-	rows, err := sqlite.commands.getUsersInQueueStmt.Query(messageId)
+	row := sqlite.commands.isQueueShuffledStmt.QueryRow(messageId)
+
+	var isShuffled int
+	if err := row.Scan(&isShuffled); err != nil {
+		return nil, err
+	}
+
+	var rows *sql.Rows
+	var err error
+	if isShuffled == 1 {
+		rows, err = sqlite.commands.getUsersInQueueShuffledStmt.Query(messageId)
+	} else {
+		rows, err = sqlite.commands.getUsersInQueueStmt.Query(messageId)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +187,11 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare get users in queue command with error: %s", err.Error())
 	}
 
+	getUsersInQueueShuffledStmt, err := db.Prepare(GetUsersInQueueShuffled)
+	if err != nil {
+		logger.Panicf("Couldn't prepare get users in queue shuffled command with error: %s", err.Error())
+	}
+
 	getDescriptionOfQueueStmt, err := db.Prepare(GetDescriptionOfQueue)
 	if err != nil {
 		logger.Panicf("Couldn't prepare get description of queue command with error: %s", err.Error())
@@ -206,12 +227,18 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare reset current person command with error: %s", err.Error())
 	}
 
+	isQueueShuffledStmt, err := db.Prepare(IsQueueShuffled)
+	if err != nil {
+		logger.Panicf("Couldn't prepare is queue shuffled command with error: %s", err.Error())
+	}
+
 	return Commands{
 		createQueueStmt:                createQueueStmt,
 		createUserStmt:                 createUserStmt,
 		setUserCurrentStepStmt:         setUserCurrentStepStmt,
 		getUserCurrentStepStmt:         getUserCurrentStepStmt,
 		getUsersInQueueStmt:            getUsersInQueueStmt,
+		getUsersInQueueShuffledStmt:    getUsersInQueueShuffledStmt,
 		getDescriptionOfQueueStmt:      getDescriptionOfQueueStmt,
 		addUserToQueueStmt:             addUserToQueueStmt,
 		countMatchesInParticipantsStmt: countMatchesInParticipantsStmt,
@@ -219,5 +246,6 @@ func getPreparedCommands(db *sql.DB) Commands {
 		startQueueStmt:                 startQueueStmt,
 		incCurrentPersonStmt:           incCurrentPersonStmt,
 		goToMenuStmt:                   resetCurrentPersonStmt,
+		isQueueShuffledStmt:            isQueueShuffledStmt,
 	}
 }

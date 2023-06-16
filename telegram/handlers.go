@@ -41,7 +41,9 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 	case constants.LogInOurOutData:
 		queue.LogInOurOut(callbackQuery, bot, storage)
 	case constants.StartQueueData:
-		queue.Start(callbackQuery, bot, storage)
+		queue.Start(callbackQuery, bot, storage, false)
+	case constants.StartQueueShuffleData:
+		queue.Start(callbackQuery, bot, storage, true)
 	case constants.NextData:
 		queue.Next(callbackQuery, bot, storage)
 	case constants.GoToMenuData:
