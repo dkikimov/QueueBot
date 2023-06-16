@@ -85,6 +85,14 @@ func GoToMenu(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, stora
 	}
 }
 
+func FinishQueue(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+	updatedMessage := ui.GetFinishedMessage(callbackQuery.InlineMessageID)
+	_, err := bot.Request(updatedMessage)
+	if err != nil {
+		logger.Fatalf("Couldn't finish queue with error: %s", err.Error())
+	}
+}
+
 func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, currentPersonIndex int) {
 	description, err := storage.GetDescriptionOfQueue(callbackQuery.InlineMessageID)
 	if err != nil {

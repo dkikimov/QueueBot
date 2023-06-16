@@ -14,6 +14,7 @@ const ForwardQueueToMessage = "Отлично! Теперь с помощью к
 const QueueDescription = "В очереди состоят:"
 
 const EndedQueue = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
+const FinishedQueue = "'Очередь' окончена 🎉"
 
 // Alert messages
 
@@ -39,4 +40,4 @@ const LogInOurOutData = "log_in_our_out"
 const StartQueueData = "start_queue"
 const NextData = "next_user"
 const GoToMenuData = "go_to_menu"
-const FinishQueueData = "end_queue"
+const FinishQueueData = "finish_queue"

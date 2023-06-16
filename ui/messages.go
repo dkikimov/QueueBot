@@ -84,3 +84,13 @@ func GetEndQueueMessage(messageID string) tgbotapi.EditMessageTextConfig {
 	}
 	return answer
 }
+
+func GetFinishedMessage(messageID string) tgbotapi.EditMessageTextConfig {
+	answer := tgbotapi.EditMessageTextConfig{
+		BaseEdit: tgbotapi.BaseEdit{
+			InlineMessageID: messageID,
+		},
+		Text: constants.FinishedQueue,
+	}
+	return answer
+}

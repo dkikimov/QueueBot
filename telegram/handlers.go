@@ -46,6 +46,8 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 		queue.Next(callbackQuery, bot, storage)
 	case constants.GoToMenuData:
 		queue.GoToMenu(callbackQuery, bot, storage)
+	case constants.FinishQueueData:
+		queue.FinishQueue(callbackQuery, bot, storage)
 	}
 }
 
