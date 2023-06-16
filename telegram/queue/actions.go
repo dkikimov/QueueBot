@@ -99,7 +99,7 @@ func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbo
 		logger.Fatalf("Couldn't get description of queue with error: %s", err.Error())
 	}
 
-	users, err := storage.GetUsersInQueue(callbackQuery.InlineMessageID)
+	users, err := storage.GetUsersInQueueCheckShuffle(callbackQuery.InlineMessageID)
 	if err != nil {
 		logger.Fatalf("Couldn't get users in queue with error: %s", err.Error())
 	}

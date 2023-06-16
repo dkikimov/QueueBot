@@ -32,6 +32,44 @@ type SQLite struct {
 	commands Commands
 }
 
+func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]user.User, error) {
+	row := sqlite.commands.isQueueShuffledStmt.QueryRow(messageId)
+
+	var isShuffled int
+	if err := row.Scan(&isShuffled); err != nil {
+		return nil, err
+	}
+
+	var rows *sql.Rows
+	var err error
+	if isShuffled == 1 {
+		rows, err = sqlite.commands.getUsersInQueueShuffledStmt.Query(messageId)
+	} else {
+		rows, err = sqlite.commands.getUsersInQueueStmt.Query(messageId)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+	//TODO: handle error
+	defer rows.Close()
+
+	var users []user.User
+	for rows.Next() {
+		var user user.User
+		if err = rows.Scan(&user.Id, &user.Name); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, err
+}
+
 func (sqlite *SQLite) StartQueue(messageId string, isShuffle bool) (error, bool) {
 	row := sqlite.commands.startQueueStmt.QueryRow(isShuffle, messageId)
 	var wasUpdated int
@@ -101,20 +139,7 @@ func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.Step) e
 }
 
 func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
-	row := sqlite.commands.isQueueShuffledStmt.QueryRow(messageId)
-
-	var isShuffled int
-	if err := row.Scan(&isShuffled); err != nil {
-		return nil, err
-	}
-
-	var rows *sql.Rows
-	var err error
-	if isShuffled == 1 {
-		rows, err = sqlite.commands.getUsersInQueueShuffledStmt.Query(messageId)
-	} else {
-		rows, err = sqlite.commands.getUsersInQueueStmt.Query(messageId)
-	}
+	rows, err := sqlite.commands.getUsersInQueueStmt.Query(messageId)
 
 	if err != nil {
 		return nil, err

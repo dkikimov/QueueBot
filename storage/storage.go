@@ -7,6 +7,8 @@ import (
 
 type Storage interface {
 	GetUsersInQueue(messageId string) ([]user.User, error)
+	GetUsersInQueueCheckShuffle(messageId string) ([]user.User, error)
+
 	CreateQueue(messageId string, description string) error
 	SetUserCurrentStep(userId int64, currentStep steps.Step) error
 	CreateUser(userId int64) error
