@@ -83,6 +83,10 @@ func FinishQueue(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, st
 	updatedMessage := ui.GetFinishedMessage(callbackQuery.InlineMessageID)
 	_, err := bot.Request(updatedMessage)
 	if err != nil {
+		logger.Fatalf("Couldn't send finish queue with error: %s", err.Error())
+	}
+
+	if err = storage.FinishQueueDeleteParticipants(callbackQuery.InlineMessageID); err != nil {
 		logger.Fatalf("Couldn't finish queue with error: %s", err.Error())
 	}
 }

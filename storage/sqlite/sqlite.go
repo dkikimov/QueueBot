@@ -24,6 +24,8 @@ type Commands struct {
 	incCurrentPersonStmt,
 	isQueueShuffledStmt,
 	shuffleUsersStmt,
+	endQueueStmt,
+	deleteRelativeParticipants,
 	goToMenuStmt *sql.Stmt
 }
 
@@ -31,6 +33,16 @@ type SQLite struct {
 	db       *sql.DB
 	mu       sync.Mutex
 	commands Commands
+}
+
+func (sqlite *SQLite) FinishQueueDeleteParticipants(messageId string) error {
+	_, err := sqlite.commands.endQueueStmt.Exec(messageId)
+	if err != nil {
+		return err
+	}
+
+	_, err = sqlite.commands.deleteRelativeParticipants.Exec(messageId)
+	return err
 }
 
 func (sqlite *SQLite) ShuffleUsers(messageId string) error {
@@ -62,11 +74,11 @@ func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]user.User
 
 	var users []user.User
 	for rows.Next() {
-		var user user.User
-		if err = rows.Scan(&user.Id, &user.Name); err != nil {
+		var currentUser user.User
+		if err = rows.Scan(&currentUser.Id, &currentUser.Name); err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+		users = append(users, currentUser)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -160,11 +172,11 @@ func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
 
 	var users []user.User
 	for rows.Next() {
-		var user user.User
-		if err = rows.Scan(&user.Id, &user.Name); err != nil {
+		var currentUser user.User
+		if err = rows.Scan(&currentUser.Id, &currentUser.Name); err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+		users = append(users, currentUser)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -273,6 +285,16 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare shuffle users command with error: %s", err.Error())
 	}
 
+	endQueueStmt, err := db.Prepare(EndQueue)
+	if err != nil {
+		logger.Panicf("Couldn't prepare end queue command with error: %s", err.Error())
+	}
+
+	deleteRelativeParticipants, err := db.Prepare(DeleteRelativeParticipants)
+	if err != nil {
+		logger.Panicf("Couldn't prepare delete relative participants command with error: %s", err.Error())
+	}
+
 	return Commands{
 		createQueueStmt:                createQueueStmt,
 		createUserStmt:                 createUserStmt,
@@ -289,5 +311,7 @@ func getPreparedCommands(db *sql.DB) Commands {
 		goToMenuStmt:                   resetCurrentPersonStmt,
 		isQueueShuffledStmt:            isQueueShuffledStmt,
 		shuffleUsersStmt:               shuffleUsersStmt,
+		endQueueStmt:                   endQueueStmt,
+		deleteRelativeParticipants:     deleteRelativeParticipants,
 	}
 }

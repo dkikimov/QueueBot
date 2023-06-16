@@ -20,4 +20,5 @@ type Storage interface {
 	IncrementCurrentPerson(messageId string) (err error, currentPerson int)
 	GoToMenu(messageId string) error
 	ShuffleUsers(messageId string) error
+	FinishQueueDeleteParticipants(messageId string) error
 }

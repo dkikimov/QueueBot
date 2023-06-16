@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS queues(
 	is_started INTEGER DEFAULT 0,
 	is_shuffled INTEGER DEFAULT 0,
 	current_person INTEGER DEFAULT 0
-	);
+);
 
 CREATE TABLE IF NOT EXISTS participants(
     message_id VARCHAR NOT NULL,
@@ -48,3 +48,6 @@ const GoToMenu = `UPDATE queues SET current_person = 0, is_started = 0 WHERE mes
 
 const IsQueueShuffled = `SELECT is_shuffled FROM queues WHERE message_id = ?; `
 const ShuffleUsers = `UPDATE participants SET order_number = random() WHERE message_id = ?; `
+
+const EndQueue = `UPDATE queues SET is_ended = 1 WHERE message_id = ?;`
+const DeleteRelativeParticipants = `DELETE FROM participants WHERE participants.message_id = ?;`

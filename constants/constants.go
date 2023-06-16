@@ -8,7 +8,7 @@ const CreateQueueCommand = "create"
 const StartCommand = "start"
 
 const CreateQueueMessage = "Окей. Теперь введи для чего предназначена эта очередь"
-const HelloMessage = "Привет! Я бот, предназначенный для создания очередей. \nДля этого введи кмманду /create"
+const HelloMessage = "Привет! Я бот, предназначенный для создания очередей. \nДля этого введи команду /create"
 const ForwardQueueToMessage = "Отлично! Теперь с помощью кнопки ниже вы можете переслать свою 'очередь'"
 
 const QueueDescription = "В очереди состоят:"
