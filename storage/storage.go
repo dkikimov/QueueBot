@@ -19,4 +19,5 @@ type Storage interface {
 	StartQueue(messageId string, isShuffle bool) (err error, wasUpdated bool)
 	IncrementCurrentPerson(messageId string) (err error, currentPerson int)
 	GoToMenu(messageId string) error
+	ShuffleUsers(messageId string) error
 }

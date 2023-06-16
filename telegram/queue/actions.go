@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"QueueBot/constants"
 	"QueueBot/logger"
 	"QueueBot/storage"
 	"QueueBot/ui"
@@ -38,11 +37,6 @@ func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, st
 	_, err = bot.Request(updatedMessage)
 	if err != nil {
 		logger.Fatalf("Couldn't update message with error: %s", err.Error())
-	}
-
-	callback := tgbotapi.NewCallback(callbackQuery.ID, constants.LogInOurOutAlert)
-	if _, err = bot.Request(callback); err != nil {
-		logger.Panicf("Couldn't process callback with error: %s", err.Error())
 	}
 }
 
@@ -114,10 +108,5 @@ func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbo
 	_, err = bot.Request(updatedMessage)
 	if err != nil {
 		logger.Fatalf("Couldn't update message after starting queue with error: %s", err.Error())
-	}
-
-	callback := tgbotapi.NewCallback(callbackQuery.ID, constants.NextData)
-	if _, err = bot.Request(callback); err != nil {
-		logger.Panicf("Couldn't process next_data callback with error: %s", err.Error())
 	}
 }

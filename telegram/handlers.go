@@ -51,6 +51,11 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 	case constants.FinishQueueData:
 		queue.FinishQueue(callbackQuery, bot, storage)
 	}
+
+	callback := tgbotapi.NewCallback(callbackQuery.ID, constants.ActionCompleted)
+	if _, err := bot.Request(callback); err != nil {
+		logger.Panicf("Couldn't process next_data callback with error: %s", err.Error())
+	}
 }
 
 func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, storage storage.Storage) {

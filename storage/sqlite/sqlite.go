@@ -23,6 +23,7 @@ type Commands struct {
 	startQueueStmt,
 	incCurrentPersonStmt,
 	isQueueShuffledStmt,
+	shuffleUsersStmt,
 	goToMenuStmt *sql.Stmt
 }
 
@@ -30,6 +31,11 @@ type SQLite struct {
 	db       *sql.DB
 	mu       sync.Mutex
 	commands Commands
+}
+
+func (sqlite *SQLite) ShuffleUsers(messageId string) error {
+	_, err := sqlite.commands.shuffleUsersStmt.Exec(messageId)
+	return err
 }
 
 func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]user.User, error) {
@@ -77,6 +83,11 @@ func (sqlite *SQLite) StartQueue(messageId string, isShuffle bool) (error, bool)
 		return err, false
 	}
 
+	if isShuffle && wasUpdated == 1 {
+		if err := sqlite.ShuffleUsers(messageId); err != nil {
+			return err, false
+		}
+	}
 	return nil, wasUpdated == 1
 }
 
@@ -257,6 +268,11 @@ func getPreparedCommands(db *sql.DB) Commands {
 		logger.Panicf("Couldn't prepare is queue shuffled command with error: %s", err.Error())
 	}
 
+	shuffleUsersStmt, err := db.Prepare(ShuffleUsers)
+	if err != nil {
+		logger.Panicf("Couldn't prepare shuffle users command with error: %s", err.Error())
+	}
+
 	return Commands{
 		createQueueStmt:                createQueueStmt,
 		createUserStmt:                 createUserStmt,
@@ -272,5 +288,6 @@ func getPreparedCommands(db *sql.DB) Commands {
 		incCurrentPersonStmt:           incCurrentPersonStmt,
 		goToMenuStmt:                   resetCurrentPersonStmt,
 		isQueueShuffledStmt:            isQueueShuffledStmt,
+		shuffleUsersStmt:               shuffleUsersStmt,
 	}
 }

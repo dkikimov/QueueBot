@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS participants(
     message_id VARCHAR NOT NULL,
     user_id BIGINT NOT NULL,
     user_name VARCHAR NOT NULL,
-    order_number INTEGER DEFAULT(random())
+    order_number INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_prt_message_id ON participants(message_id);
@@ -47,3 +47,4 @@ const IncrementCurrentPerson = `UPDATE queues SET current_person = current_perso
 const GoToMenu = `UPDATE queues SET current_person = 0, is_started = 0 WHERE message_id = ?; `
 
 const IsQueueShuffled = `SELECT is_shuffled FROM queues WHERE message_id = ?; `
+const ShuffleUsers = `UPDATE participants SET order_number = random() WHERE message_id = ?; `

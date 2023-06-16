@@ -18,7 +18,7 @@ const FinishedQueue = "'Очередь' окончена 🎉"
 
 // Alert messages
 
-const LogInOurOutAlert = "Действие выполнено!"
+const ActionCompleted = "Действие выполнено!"
 
 // Inline query
 
