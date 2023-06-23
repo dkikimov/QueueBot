@@ -17,6 +17,8 @@ func main() {
 	bot, err := tgBotApi.NewBotAPI(os.Getenv("BOT_TOKEN"))
 	storage := sqlite.NewDatabase()
 
+	defer storage.Close()
+
 	if err != nil {
 		logger.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
@@ -41,6 +43,5 @@ func main() {
 		case update.ChosenInlineResult != nil:
 			telegram.HandleChosenInlineResult(update.ChosenInlineResult, storage)
 		}
-
 	}
 }

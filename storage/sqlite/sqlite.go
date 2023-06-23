@@ -35,6 +35,60 @@ type SQLite struct {
 	commands Commands
 }
 
+// TODO: simplify
+
+func (sqlite *SQLite) Close() error {
+	if err := sqlite.commands.createQueueStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.createUserStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.setUserCurrentStepStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.getUsersInQueueStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.getUsersInQueueShuffledStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.getDescriptionOfQueueStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.addUserToQueueStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.countMatchesInParticipantsStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.incCurrentPersonStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.isQueueShuffledStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.shuffleUsersStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.removeUserFromQueueStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.endQueueStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.deleteRelativeParticipants.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.goToMenuStmt.Close(); err != nil {
+		return err
+	}
+	if err := sqlite.commands.startQueueStmt.Close(); err != nil {
+		return err
+	}
+	return sqlite.db.Close()
+}
+
 func (sqlite *SQLite) FinishQueueDeleteParticipants(messageId string) error {
 	_, err := sqlite.commands.endQueueStmt.Exec(messageId)
 	if err != nil {

@@ -21,4 +21,6 @@ type Storage interface {
 	GoToMenu(messageId string) error
 	ShuffleUsers(messageId string) error
 	FinishQueueDeleteParticipants(messageId string) error
+
+	Close() error
 }
