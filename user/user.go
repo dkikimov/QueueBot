@@ -17,10 +17,11 @@ func New(id int64, lastName string, firstName string) User {
 // TODO: Make more effective
 
 func ListToString(users []User) (result string) {
+	sb := strings.Builder{}
 	for _, user := range users {
-		result += user.Name + "\n"
+		sb.WriteString(user.Name + "\n")
 	}
-	return result
+	return sb.String()
 }
 
 func ListToStringWithCurrent(users []User, currentUser int) (result string) {
