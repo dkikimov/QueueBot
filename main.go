@@ -35,7 +35,7 @@ func main() {
 	for update := range updates {
 		switch {
 		case update.Message != nil:
-			telegram.HandleMessage(&update, bot, storage)
+			telegram.HandleMessage(update.Message, bot, storage)
 		case update.CallbackQuery != nil:
 			telegram.HandleCallbackQuery(update.CallbackQuery, bot, storage)
 		case update.InlineQuery != nil:

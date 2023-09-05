@@ -11,27 +11,27 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func HandleMessage(update *tgbotapi.Update, bot *tgbotapi.BotAPI, storage storage.Storage) {
-	switch update.Message.Command() {
+func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage storage.Storage) {
+	switch message.Command() {
 	case constants.StartCommand:
-		SendHelloMessage(update.Message, bot, storage)
+		SendHelloMessage(message, bot, storage)
 		return
 	case constants.CreateQueueCommand:
-		SendMessageToCreateQueue(update.Message, bot, storage)
+		SendMessageToCreateQueue(message, bot, storage)
 		return
 	}
 
-	currentStep, err := storage.GetUserCurrentStep(update.Message.From.ID)
+	currentStep, err := storage.GetUserCurrentStep(message.From.ID)
 	if err != nil {
 		logger.Fatalf("Couldn't get current user step with error: %s", err.Error())
 	}
 
 	switch currentStep {
 	case steps.Menu:
-		SendHelloMessage(update.Message, bot, storage)
+		SendHelloMessage(message, bot, storage)
 		break
 	case steps.EnteringDescription:
-		SendForwardToMessage(update.Message, bot)
+		SendForwardToMessage(message, bot)
 		break
 	}
 }
