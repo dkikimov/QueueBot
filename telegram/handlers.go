@@ -54,34 +54,46 @@ func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage stor
 
 func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, errChan chan<- error) {
 	// Сверяемся со скрытыми данными, заложенными в сообщении для определения команды
+	wasError := false
 	switch callbackQuery.Data {
 	case constants.LogInOurOutData:
 		if err := queue.LogInOurOut(callbackQuery, bot, storage); err != nil {
 			errChan <- err
+			wasError = true
 		}
 	case constants.StartQueueData:
 		if err := queue.Start(callbackQuery, bot, storage, false); err != nil {
 			errChan <- err
+			wasError = true
 		}
 	case constants.StartQueueShuffleData:
 		if err := queue.Start(callbackQuery, bot, storage, true); err != nil {
 			errChan <- err
+			wasError = true
 		}
 	case constants.NextData:
 		if err := queue.Next(callbackQuery, bot, storage); err != nil {
 			errChan <- err
+			wasError = true
 		}
 	case constants.GoToMenuData:
 		if err := queue.GoToMenu(callbackQuery, bot, storage); err != nil {
 			errChan <- err
+			wasError = true
 		}
 	case constants.FinishQueueData:
 		if err := queue.FinishQueue(callbackQuery, bot, storage); err != nil {
 			errChan <- err
+			wasError = true
 		}
 	}
 
-	callback := tgbotapi.NewCallback(callbackQuery.ID, constants.ActionCompleted)
+	var callback tgbotapi.CallbackConfig
+	if wasError {
+		callback = tgbotapi.NewCallback(callbackQuery.ID, constants.ActionError)
+	} else {
+		callback = tgbotapi.NewCallback(callbackQuery.ID, constants.ActionCompleted)
+	}
 	if _, err := bot.Request(callback); err != nil {
 		errChan <- fmt.Errorf("couldn't process next_data callback with error: %s", err)
 		return

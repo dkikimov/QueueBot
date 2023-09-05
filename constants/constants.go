@@ -19,6 +19,7 @@ const FinishedQueue = "'Очередь' окончена 🎉"
 // Alert messages
 
 const ActionCompleted = "Действие выполнено!"
+const ActionError = "Произошла ошибка"
 
 // Inline query
 
