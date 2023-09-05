@@ -10,7 +10,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage storage.Storage, errChan chan error) {
+func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage storage.Storage, errChan chan<- error) {
 	// Проверяем, если сообщение - команда.
 	// Если да, отправляем соотвутствующее сообщение
 	switch message.Command() {
@@ -52,7 +52,7 @@ func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage stor
 	}
 }
 
-func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, errChan chan error) {
+func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, errChan chan<- error) {
 	// Сверяемся со скрытыми данными, заложенными в сообщении для определения команды
 	switch callbackQuery.Data {
 	case constants.LogInOurOutData:
@@ -88,12 +88,12 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 	}
 }
 
-func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, storage storage.Storage, errChan chan error) {
+func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, storage storage.Storage, errChan chan<- error) {
 	//TODO: Middleware for query
 	errChan <- queue.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query, storage)
 }
 
-func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, errChan chan error) {
+func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, errChan chan<- error) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, constants.CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
 	article.InputMessageContent = ui.GetQueueMessageContent(inlineQuery.Query)
 

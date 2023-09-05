@@ -34,7 +34,7 @@ func main() {
 	logger.Printf("Bot started")
 
 	errChan := make(chan error)
-	go func() {
+	go func(updates tgBotApi.UpdatesChannel) {
 		for update := range updates {
 			switch {
 			case update.Message != nil:
@@ -47,9 +47,11 @@ func main() {
 				go telegram.HandleChosenInlineResult(update.ChosenInlineResult, storage, errChan)
 			}
 		}
-	}()
+	}(updates)
 
 	for err := range errChan {
-		logger.Println(err.Error())
+		if err != nil {
+			logger.Println(err.Error())
+		}
 	}
 }
