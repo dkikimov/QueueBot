@@ -1,105 +1,113 @@
 package queue
 
 import (
-	"QueueBot/logger"
 	"QueueBot/storage"
 	"QueueBot/ui"
 	"QueueBot/user"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func Create(messageId string, description string, storage storage.Storage) {
+func Create(messageId string, description string, storage storage.Storage) error {
 	if err := storage.CreateQueue(messageId, description); err != nil {
-		logger.Fatalf("Couldn't create queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't create queue with error: %s", err)
 	}
+	return nil
 }
 
-func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) error {
 	description, err := storage.GetDescriptionOfQueue(callbackQuery.InlineMessageID)
 	if err != nil {
-		logger.Fatalf("Couldn't get description of queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't get description of queue with error: %s", err)
 	}
 
 	if err = storage.LogInOurOutQueue(
 		callbackQuery.InlineMessageID,
 		user.New(callbackQuery.From.ID, callbackQuery.From.LastName, callbackQuery.From.FirstName),
 	); err != nil {
-		logger.Fatalf("Couldn't add user to queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't add user to queue with error: %s", err)
 	}
 
 	users, err := storage.GetUsersInQueue(callbackQuery.InlineMessageID)
 	if err != nil {
-		logger.Fatalf("Couldn't get users in queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't get users in queue with error: %s", err)
 	}
 
 	updatedMessage := ui.GetUpdatedQueueMessage(callbackQuery.InlineMessageID, description, users)
 
 	_, err = bot.Request(updatedMessage)
 	if err != nil {
-		logger.Fatalf("Couldn't update message with error: %s", err.Error())
+		return fmt.Errorf("couldn't update message with error: %s", err)
 	}
+
+	return nil
 }
 
-func Start(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, isShuffled bool) {
+func Start(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, isShuffled bool) error {
 	err, wasUpdated := storage.StartQueue(callbackQuery.InlineMessageID, isShuffled)
 	if err != nil {
-		logger.Fatalf("Couldn't start queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't start queue with error: %s", err)
 	}
 
 	if !wasUpdated {
-		return
+		return nil
 	}
 
-	sendQueueAfterStartMessage(callbackQuery, bot, storage, 0)
+	return sendQueueAfterStartMessage(callbackQuery, bot, storage, 0)
 }
 
-func Next(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+func Next(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) error {
 	err, currentPersonIndex := storage.IncrementCurrentPerson(callbackQuery.InlineMessageID)
 	if err != nil {
-		logger.Fatalf("Couldn't increment current person in queue %s with error: %s", callbackQuery.InlineMessageID, err.Error())
+		return fmt.Errorf("couldn't increment current person in queue %s with error: %s", callbackQuery.InlineMessageID, err)
+
 	}
-	sendQueueAfterStartMessage(callbackQuery, bot, storage, currentPersonIndex)
+
+	return sendQueueAfterStartMessage(callbackQuery, bot, storage, currentPersonIndex)
 }
 
-func GoToMenu(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+func GoToMenu(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) error {
 	description, err := storage.GetDescriptionOfQueue(callbackQuery.InlineMessageID)
 	if err = storage.GoToMenu(callbackQuery.InlineMessageID); err != nil {
-		logger.Fatalf("Couldn't reset current person. Queue id: %s", callbackQuery.InlineMessageID)
+		return fmt.Errorf("couldn't reset current person. Queue id: %s", callbackQuery.InlineMessageID)
 	}
 
 	users, err := storage.GetUsersInQueue(callbackQuery.InlineMessageID)
 	if err != nil {
-		logger.Fatalf("Couldn't get users in queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't get users in queue with error: %s", err)
 	}
 
 	updatedMessage := ui.GetQueueMessage(callbackQuery.InlineMessageID, users, description)
 	_, err = bot.Request(updatedMessage)
 	if err != nil {
-		logger.Fatalf("Couldn't go to menu with error: %s", err.Error())
+		return fmt.Errorf("couldn't go to menu with error: %s", err)
 	}
+	return nil
 }
 
-func FinishQueue(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+func FinishQueue(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) error {
 	updatedMessage := ui.GetFinishedMessage(callbackQuery.InlineMessageID)
 	_, err := bot.Request(updatedMessage)
 	if err != nil {
-		logger.Fatalf("Couldn't send finish queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't send finish queue with error: %s", err)
 	}
 
 	if err = storage.FinishQueueDeleteParticipants(callbackQuery.InlineMessageID); err != nil {
-		logger.Fatalf("Couldn't finish queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't finish queue with error: %s", err)
 	}
+
+	return nil
 }
 
-func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, currentPersonIndex int) {
+func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage, currentPersonIndex int) error {
 	description, err := storage.GetDescriptionOfQueue(callbackQuery.InlineMessageID)
 	if err != nil {
-		logger.Fatalf("Couldn't get description of queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't get description of queue with error: %s", err)
 	}
 
 	users, err := storage.GetUsersInQueueCheckShuffle(callbackQuery.InlineMessageID)
 	if err != nil {
-		logger.Fatalf("Couldn't get users in queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't get users in queue with error: %s", err)
 	}
 
 	var updatedMessage tgbotapi.EditMessageTextConfig
@@ -111,6 +119,8 @@ func sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, bot *tgbo
 
 	_, err = bot.Request(updatedMessage)
 	if err != nil {
-		logger.Fatalf("Couldn't update message after starting queue with error: %s", err.Error())
+		return fmt.Errorf("couldn't update message after starting queue with error: %s", err.Error())
 	}
+
+	return nil
 }
