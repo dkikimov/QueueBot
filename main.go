@@ -39,7 +39,7 @@ func main() {
 		case update.CallbackQuery != nil:
 			go telegram.HandleCallbackQuery(update.CallbackQuery, bot, storage)
 		case update.InlineQuery != nil:
-			go telegram.HandleInlineQuery(update.InlineQuery, bot, storage)
+			go telegram.HandleInlineQuery(update.InlineQuery, bot)
 		case update.ChosenInlineResult != nil:
 			go telegram.HandleChosenInlineResult(update.ChosenInlineResult, storage)
 		}

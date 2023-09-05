@@ -12,6 +12,8 @@ import (
 )
 
 func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage storage.Storage) {
+	// Проверяем, если сообщение - команда.
+	// Если да, отправляем соотвутствующее сообщение
 	switch message.Command() {
 	case constants.StartCommand:
 		SendHelloMessage(message, bot, storage)
@@ -21,6 +23,7 @@ func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage stor
 		return
 	}
 
+	// Получаем текущее состояние пользователя для понимания какое действие ожидается быть следующим
 	currentStep, err := storage.GetUserCurrentStep(message.From.ID)
 	if err != nil {
 		logger.Fatalf("Couldn't get current user step with error: %s", err.Error())
@@ -37,6 +40,7 @@ func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage stor
 }
 
 func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+	// Сверяемся со скрытыми данными, заложенными в сообщении для определения команды
 	switch callbackQuery.Data {
 	case constants.LogInOurOutData:
 		queue.LogInOurOut(callbackQuery, bot, storage)
@@ -63,7 +67,7 @@ func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, s
 	queue.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query, storage)
 }
 
-func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, storage storage.Storage) {
+func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, constants.CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
 	article.InputMessageContent = ui.GetQueueMessageContent(inlineQuery.Query)
 
