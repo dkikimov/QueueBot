@@ -6,7 +6,6 @@ import (
 	"QueueBot/user"
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"sync"
 )
 
 type Commands struct {
@@ -31,7 +30,6 @@ type Commands struct {
 
 type SQLite struct {
 	db       *sql.DB
-	mu       sync.Mutex
 	commands Commands
 }
 

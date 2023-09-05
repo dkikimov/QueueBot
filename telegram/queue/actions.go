@@ -68,6 +68,9 @@ func Next(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage s
 
 func GoToMenu(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, storage storage.Storage) error {
 	description, err := storage.GetDescriptionOfQueue(callbackQuery.InlineMessageID)
+	if err != nil {
+		return fmt.Errorf("couldn't get description of queue with error: %s", err)
+	}
 	if err = storage.GoToMenu(callbackQuery.InlineMessageID); err != nil {
 		return fmt.Errorf("couldn't reset current person. Queue id: %s", callbackQuery.InlineMessageID)
 	}
