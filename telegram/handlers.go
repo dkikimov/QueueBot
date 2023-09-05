@@ -101,8 +101,14 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 }
 
 func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, storage storage.Storage, errChan chan<- error) {
-	//TODO: Middleware for query
-	errChan <- queue.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query, storage)
+	// Обрубаем слишком длинные описания
+	if len(chosenInlineResult.Query) > 100 {
+		chosenInlineResult.Query = chosenInlineResult.Query[:100]
+	}
+
+	if err := queue.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query, storage); err != nil {
+		errChan <- err
+	}
 }
 
 func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, errChan chan<- error) {
