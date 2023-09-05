@@ -58,32 +58,32 @@ func HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.Bo
 	switch callbackQuery.Data {
 	case constants.LogInOurOutData:
 		if err := queue.LogInOurOut(callbackQuery, bot, storage); err != nil {
-			errChan <- err
+			errChan <- fmt.Errorf("couldn't login or logout with error: %s", err)
 			wasError = true
 		}
 	case constants.StartQueueData:
 		if err := queue.Start(callbackQuery, bot, storage, false); err != nil {
-			errChan <- err
+			errChan <- fmt.Errorf("couldn't start queue with error: %s", err)
 			wasError = true
 		}
 	case constants.StartQueueShuffleData:
 		if err := queue.Start(callbackQuery, bot, storage, true); err != nil {
-			errChan <- err
+			errChan <- fmt.Errorf("couldn't start queue with shuffle with error: %s", err)
 			wasError = true
 		}
 	case constants.NextData:
 		if err := queue.Next(callbackQuery, bot, storage); err != nil {
-			errChan <- err
+			errChan <- fmt.Errorf("couldn't go to next person with error: %s", err)
 			wasError = true
 		}
 	case constants.GoToMenuData:
 		if err := queue.GoToMenu(callbackQuery, bot, storage); err != nil {
-			errChan <- err
+			errChan <- fmt.Errorf("couldn't go to menu with error: %s", err)
 			wasError = true
 		}
 	case constants.FinishQueueData:
 		if err := queue.FinishQueue(callbackQuery, bot, storage); err != nil {
-			errChan <- err
+			errChan <- fmt.Errorf("couldn't finish queue with error: %s", err)
 			wasError = true
 		}
 	}
