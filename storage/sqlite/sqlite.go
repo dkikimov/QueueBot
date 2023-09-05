@@ -180,11 +180,10 @@ func (sqlite *SQLite) LogInOurOutQueue(messageId string, user user.User) (err er
 
 	if count == 1 {
 		_, err = sqlite.commands.removeUserFromQueueStmt.Exec(user.Id, messageId)
-		logger.Printf("Removed user with id %s", user.Id)
+		logger.Printf("Removed user with id %d", user.Id)
 	} else {
 		_, err = sqlite.commands.addUserToQueueStmt.Exec(messageId, user.Id, user.Name)
-		logger.Printf("Added user user with id %s", user.Id)
-
+		logger.Printf("Added user user with id %d", user.Id)
 	}
 	return err
 }
