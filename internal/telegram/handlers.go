@@ -1,13 +1,15 @@
 package telegram
 
 import (
-	"QueueBot/constants"
-	"QueueBot/storage"
-	"QueueBot/telegram/queue"
-	"QueueBot/telegram/steps"
-	"QueueBot/ui"
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"QueueBot/internal/constants"
+	"QueueBot/internal/storage"
+	"QueueBot/internal/telegram/queue"
+	"QueueBot/internal/telegram/steps"
+	ui2 "QueueBot/internal/telegram/ui"
 )
 
 func HandleMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage storage.Storage, errChan chan<- error) {
@@ -113,9 +115,9 @@ func HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, s
 
 func HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, bot *tgbotapi.BotAPI, errChan chan<- error) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, constants.CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
-	article.InputMessageContent = ui.GetQueueMessageContent(inlineQuery.Query)
+	article.InputMessageContent = ui2.GetQueueMessageContent(inlineQuery.Query)
 
-	keyboard := ui.GetBeforeStartKeyboard()
+	keyboard := ui2.GetBeforeStartKeyboard()
 	article.ReplyMarkup = &keyboard
 
 	inlineConf := tgbotapi.InlineConfig{

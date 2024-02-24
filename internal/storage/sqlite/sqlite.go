@@ -1,11 +1,13 @@
 package sqlite
 
 import (
-	"QueueBot/logger"
-	"QueueBot/telegram/steps"
-	"QueueBot/user"
 	"database/sql"
+
 	_ "github.com/mattn/go-sqlite3"
+
+	"QueueBot/internal/logger"
+	"QueueBot/internal/models"
+	"QueueBot/internal/telegram/steps"
 )
 
 type Commands struct {
@@ -102,7 +104,7 @@ func (sqlite *SQLite) ShuffleUsers(messageId string) error {
 	return err
 }
 
-func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]user.User, error) {
+func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]models.User, error) {
 	row := sqlite.commands.isQueueShuffledStmt.QueryRow(messageId)
 
 	var isShuffled int
@@ -121,12 +123,12 @@ func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]user.User
 	if err != nil {
 		return nil, err
 	}
-	//TODO: handle error
+	// TODO: handle error
 	defer rows.Close()
 
-	var users []user.User
+	var users []models.User
 	for rows.Next() {
-		var currentUser user.User
+		var currentUser models.User
 		if err = rows.Scan(&currentUser.Id, &currentUser.Name); err != nil {
 			return nil, err
 		}
@@ -169,7 +171,7 @@ func (sqlite *SQLite) IncrementCurrentPerson(messageId string) (err error, curre
 	return err, currentPerson
 }
 
-func (sqlite *SQLite) LogInOurOutQueue(messageId string, user user.User) (err error) {
+func (sqlite *SQLite) LogInOurOutQueue(messageId string, user models.User) (err error) {
 	row := sqlite.commands.countMatchesInParticipantsStmt.QueryRow(user.Id, messageId)
 	var count int
 	if err = row.Scan(&count); err != nil {
@@ -212,18 +214,18 @@ func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.Step) e
 	return err
 }
 
-func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]user.User, error) {
+func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]models.User, error) {
 	rows, err := sqlite.commands.getUsersInQueueStmt.Query(messageId)
 
 	if err != nil {
 		return nil, err
 	}
-	//TODO: handle error
+
 	defer rows.Close()
 
-	var users []user.User
+	var users []models.User
 	for rows.Next() {
-		var currentUser user.User
+		var currentUser models.User
 		if err = rows.Scan(&currentUser.Id, &currentUser.Name); err != nil {
 			return nil, err
 		}
@@ -243,7 +245,7 @@ func (sqlite *SQLite) CreateQueue(messageId string, description string) error {
 }
 
 func NewDatabase() *SQLite {
-	//db, err := sql.Open("sqlite3", "file:./database.sqlite3:memory:?cache=shared")
+	// db, err := sql.Open("sqlite3", "file:./database.sqlite3:memory:?cache=shared")
 	db, err := sql.Open("sqlite3", "./database.sqlite3?cache=shared")
 
 	if err != nil {

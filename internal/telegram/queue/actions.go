@@ -1,11 +1,13 @@
 package queue
 
 import (
-	"QueueBot/storage"
-	"QueueBot/ui"
-	"QueueBot/user"
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"QueueBot/internal/models"
+	"QueueBot/internal/storage"
+	"QueueBot/internal/telegram/ui"
 )
 
 func Create(messageId string, description string, storage storage.Storage) error {
@@ -23,7 +25,7 @@ func LogInOurOut(callbackQuery *tgbotapi.CallbackQuery, bot *tgbotapi.BotAPI, st
 
 	if err = storage.LogInOurOutQueue(
 		callbackQuery.InlineMessageID,
-		user.New(callbackQuery.From.ID, callbackQuery.From.LastName, callbackQuery.From.FirstName),
+		models.New(callbackQuery.From.ID, callbackQuery.From.LastName, callbackQuery.From.FirstName),
 	); err != nil {
 		return fmt.Errorf("couldn't add user to queue with error: %s", err)
 	}

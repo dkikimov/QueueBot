@@ -1,8 +1,9 @@
 package ui
 
 import (
-	"QueueBot/constants"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"QueueBot/internal/constants"
 )
 
 func GetBeforeStartKeyboard() tgbotapi.InlineKeyboardMarkup {

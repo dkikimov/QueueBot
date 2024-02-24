@@ -1,12 +1,14 @@
 package telegram
 
 import (
-	"QueueBot/constants"
-	"QueueBot/storage"
-	"QueueBot/telegram/steps"
-	"QueueBot/ui"
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
+	"QueueBot/internal/constants"
+	"QueueBot/internal/storage"
+	"QueueBot/internal/telegram/steps"
+	"QueueBot/internal/telegram/ui"
 )
 
 func SendHelloMessage(message *tgbotapi.Message, bot *tgbotapi.BotAPI, storage storage.Storage) error {

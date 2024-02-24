@@ -1,12 +1,14 @@
 package main
 
 import (
-	"QueueBot/logger"
-	"QueueBot/storage/sqlite"
-	"QueueBot/telegram"
+	"os"
+
 	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
-	"os"
+
+	"QueueBot/internal/logger"
+	"QueueBot/internal/storage/sqlite"
+	"QueueBot/internal/telegram"
 )
 
 func main() {
