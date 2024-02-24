@@ -1,20 +1,19 @@
-package ui
+package telegram
 
 import (
 	"fmt"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"QueueBot/internal/constants"
 	"QueueBot/internal/models"
 )
 
 func getMessageContentBeforeStart(title string, users []models.User) string {
-	return fmt.Sprintf("*%s*\n%s\n%s", title, constants.QueueDescription, models.ListToString(users))
+	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, models.ListToString(users))
 }
 
 func getMessageContentAfterStart(title string, users []models.User, currentPersonIndex int) string {
-	return fmt.Sprintf("*%s*\n%s\n%s", title, constants.QueueDescription, models.ListToStringWithCurrent(users, currentPersonIndex))
+	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, models.ListToStringWithCurrent(users, currentPersonIndex))
 }
 
 func GetQueueMessageContent(description string) tgbotapi.InputTextMessageContent {
@@ -52,9 +51,9 @@ func GetUpdatedQueueMessage(messageID string, description string, users []models
 }
 
 func GetForwardMessage(chatId int64, description string) tgbotapi.MessageConfig {
-	answer := tgbotapi.NewMessage(chatId, constants.ForwardQueueToMessage)
+	answer := tgbotapi.NewMessage(chatId, ForwardQueueToMessage)
 	answer.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonSwitch(constants.ForwardQueueButton, description),
+		tgbotapi.NewInlineKeyboardButtonSwitch(ForwardQueueButton, description),
 	))
 	answer.ParseMode = tgbotapi.ModeMarkdown
 	return answer
@@ -82,7 +81,7 @@ func GetEndQueueMessage(messageID string) tgbotapi.EditMessageTextConfig {
 			InlineMessageID: messageID,
 			ReplyMarkup:     &keyboard,
 		},
-		Text: constants.EndedQueue,
+		Text: EndedQueue,
 	}
 	return answer
 }
@@ -92,7 +91,7 @@ func GetFinishedMessage(messageID string) tgbotapi.EditMessageTextConfig {
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: messageID,
 		},
-		Text: constants.FinishedQueue,
+		Text: FinishedQueue,
 	}
 	return answer
 }

@@ -1,9 +1,7 @@
-package ui
+package telegram
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
-	"QueueBot/internal/constants"
 )
 
 func GetBeforeStartKeyboard() tgbotapi.InlineKeyboardMarkup {
@@ -46,25 +44,25 @@ func GetEndedQueueKeyboard() tgbotapi.InlineKeyboardMarkup {
 }
 
 func logInOurOutQueueButton() tgbotapi.InlineKeyboardButton {
-	return tgbotapi.NewInlineKeyboardButtonData(constants.LogInOurOutButton, constants.LogInOurOutData)
+	return tgbotapi.NewInlineKeyboardButtonData(LogInOurOutButton, LogInOurOutData)
 }
 
 func startQueueButton() tgbotapi.InlineKeyboardButton {
-	return tgbotapi.NewInlineKeyboardButtonData(constants.StartQueueButton, constants.StartQueueData)
+	return tgbotapi.NewInlineKeyboardButtonData(StartQueueButton, StartQueueData)
 }
 
 func startQueueShuffleButton() tgbotapi.InlineKeyboardButton {
-	return tgbotapi.NewInlineKeyboardButtonData(constants.StartQueueShuffleButton, constants.StartQueueShuffleData)
+	return tgbotapi.NewInlineKeyboardButtonData(StartQueueShuffleButton, StartQueueShuffleData)
 }
 
 func nextButton() tgbotapi.InlineKeyboardButton {
-	return tgbotapi.NewInlineKeyboardButtonData(constants.NextButton, constants.NextData)
+	return tgbotapi.NewInlineKeyboardButtonData(NextButton, NextData)
 }
 
 func goToMenuButton() tgbotapi.InlineKeyboardButton {
-	return tgbotapi.NewInlineKeyboardButtonData(constants.GoToMenuButton, constants.GoToMenuData)
+	return tgbotapi.NewInlineKeyboardButtonData(GoToMenuButton, GoToMenuData)
 }
 
 func endQueueButton() tgbotapi.InlineKeyboardButton {
-	return tgbotapi.NewInlineKeyboardButtonData(constants.FinishQueueButton, constants.FinishQueueData)
+	return tgbotapi.NewInlineKeyboardButtonData(FinishQueueButton, FinishQueueData)
 }

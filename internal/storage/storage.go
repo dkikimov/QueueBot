@@ -2,7 +2,7 @@ package storage
 
 import (
 	"QueueBot/internal/models"
-	"QueueBot/internal/telegram/steps"
+	"QueueBot/internal/steps"
 )
 
 type Storage interface {
@@ -10,9 +10,9 @@ type Storage interface {
 	GetUsersInQueueCheckShuffle(messageId string) ([]models.User, error)
 
 	CreateQueue(messageId string, description string) error
-	SetUserCurrentStep(userId int64, currentStep steps.Step) error
+	SetUserCurrentStep(userId int64, currentStep steps.ChatStep) error
 	CreateUser(userId int64) error
-	GetUserCurrentStep(userId int64) (steps.Step, error)
+	GetUserCurrentStep(userId int64) (steps.ChatStep, error)
 	GetDescriptionOfQueue(messageId string) (string, error)
 	LogInOurOutQueue(messageId string, user models.User) error
 

@@ -14,8 +14,6 @@ func New(id int64, lastName string, firstName string) User {
 	return User{Id: id, Name: strings.TrimSpace(strings.Join([]string{lastName, firstName}, " "))}
 }
 
-// TODO: Make more effective
-
 func ListToString(users []User) (result string) {
 	for _, user := range users {
 		result += user.Name + "\n"

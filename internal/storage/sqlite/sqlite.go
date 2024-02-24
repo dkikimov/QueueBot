@@ -7,7 +7,7 @@ import (
 
 	"QueueBot/internal/logger"
 	"QueueBot/internal/models"
-	"QueueBot/internal/telegram/steps"
+	"QueueBot/internal/steps"
 )
 
 type Commands struct {
@@ -123,7 +123,7 @@ func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]models.Us
 	if err != nil {
 		return nil, err
 	}
-	// TODO: handle error
+
 	defer rows.Close()
 
 	var users []models.User
@@ -196,7 +196,7 @@ func (sqlite *SQLite) GetDescriptionOfQueue(messageId string) (description strin
 	return description, err
 }
 
-func (sqlite *SQLite) GetUserCurrentStep(userId int64) (currentStep steps.Step, err error) {
+func (sqlite *SQLite) GetUserCurrentStep(userId int64) (currentStep steps.ChatStep, err error) {
 	result := sqlite.commands.getUserCurrentStepStmt.QueryRow(userId)
 	if err = result.Scan(&currentStep); err != nil {
 		return 0, err
@@ -209,7 +209,7 @@ func (sqlite *SQLite) CreateUser(userId int64) error {
 	return err
 }
 
-func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.Step) error {
+func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.ChatStep) error {
 	_, err := sqlite.commands.setUserCurrentStepStmt.Exec(int(currentStep), userId)
 	return err
 }
@@ -245,7 +245,6 @@ func (sqlite *SQLite) CreateQueue(messageId string, description string) error {
 }
 
 func NewDatabase() *SQLite {
-	// db, err := sql.Open("sqlite3", "file:./database.sqlite3:memory:?cache=shared")
 	db, err := sql.Open("sqlite3", "./database.sqlite3?cache=shared")
 
 	if err != nil {

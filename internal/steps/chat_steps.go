@@ -1,8 +1,8 @@
 package steps
 
-type Step int
+type ChatStep int
 
 const (
-	Menu Step = iota
+	Menu ChatStep = iota
 	EnteringDescription
 )
