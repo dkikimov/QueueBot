@@ -1,4 +1,4 @@
-package user
+package models
 
 import (
 	"fmt"
@@ -13,8 +13,6 @@ type User struct {
 func New(id int64, lastName string, firstName string) User {
 	return User{Id: id, Name: strings.TrimSpace(strings.Join([]string{lastName, firstName}, " "))}
 }
-
-// TODO: Make more effective
 
 func ListToString(users []User) (result string) {
 	sb := strings.Builder{}

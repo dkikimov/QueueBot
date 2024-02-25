@@ -20,6 +20,10 @@ func Printf(text string, v ...any) {
 	infoLogger.Printf(text, v...)
 }
 
+func Println(text string) {
+	infoLogger.Println(text)
+}
+
 func Panicf(text string, v ...any) {
 	errorLogger.Panicf(text, v...)
 }
