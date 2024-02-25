@@ -5,7 +5,6 @@ import (
 	"os"
 
 	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 
 	"QueueBot/internal/logger"
 	"QueueBot/internal/storage/sqlite"
@@ -13,13 +12,14 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		logger.Panicf("Couldn't open .env file %s", err)
+	botToken, exists := os.LookupEnv("BOT_TOKEN")
+	if exists == false {
+		logger.Fatalf("Bot token is not provided")
 	}
 
-	tgBot, err := tgBotApi.NewBotAPI(os.Getenv("BOT_TOKEN"))
+	tgBot, err := tgBotApi.NewBotAPI(botToken)
 	if err != nil {
-		logger.Panicf("Couldn't initialize bot with error: %s", err.Error())
+		logger.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
 
 	if os.Getenv("DEBUG") == "true" {

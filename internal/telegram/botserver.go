@@ -52,7 +52,6 @@ func NewBotServer(bot *Bot) *BotServer {
 }
 
 func (s BotServer) Listen(config tgbotapi.UpdateConfig, errChan chan<- error) {
-
 	updates := s.bot.TgBot.GetUpdatesChan(config)
 	logger.Printf("Bot started")
 
