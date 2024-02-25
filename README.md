@@ -29,21 +29,32 @@
    go mod download
    ```
 
-3. **Configure the bot:**
-
-   * Create a Telegram Bot using BotFather (@BotFather).
-   * Create `.env` file and fill it by example:
-   ```
-   BOT_TOKEN=
-   DEBUG=true   (or false)
-   ```
-4. **Run the bot:**
+3. **Build and run the bot:**
 
    ```bash
-   go run main.go
+   go build cmd/main.go
+   BOT_TOKEN={your_token} DEBUG={true or false} ./main
    ```
 
+### Docker way
 
+1. **Build the image:**
+
+   ```bash
+   docker build . -t queue-bot
+   ```
+2. **Create .env file:**
+
+   ```
+   BOT_TOKEN=your_token
+   DEBUG=true     (false is default)
+   ```
+
+3. **Create and run container:**
+
+   ```bash
+   docker run --env-file .env --rm queue-bot 
+   ```
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
