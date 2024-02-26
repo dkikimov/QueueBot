@@ -8,6 +8,7 @@ import (
 	"QueueBot/internal/models"
 	"QueueBot/internal/steps"
 	"QueueBot/internal/storage"
+	"QueueBot/internal/telegram/messages"
 )
 
 type Bot struct {
@@ -46,7 +47,7 @@ func (b Bot) SendMessageToCreateQueue(message *tgbotapi.Message) error {
 }
 
 func (b Bot) SendForwardToMessage(message *tgbotapi.Message) error {
-	msg := GetForwardMessage(message.Chat.ID, message.Text)
+	msg := messages.GetForwardMessage(message.Chat.ID, message.Text)
 	if _, err := b.TgBot.Send(msg); err != nil {
 		return fmt.Errorf("couldn't send forward to message in telegram with error: %s", err)
 	}
@@ -78,7 +79,7 @@ func (b Bot) LogInOurOut(callbackQuery *tgbotapi.CallbackQuery) error {
 		return fmt.Errorf("couldn't get users in queue with error: %s", err)
 	}
 
-	updatedMessage := GetUpdatedQueueMessage(callbackQuery.InlineMessageID, description, users)
+	updatedMessage := messages.GetUpdatedQueueMessage(callbackQuery.InlineMessageID, description, users)
 
 	_, err = b.TgBot.Request(updatedMessage)
 	if err != nil {
@@ -125,7 +126,7 @@ func (b Bot) GoToMenu(callbackQuery *tgbotapi.CallbackQuery) error {
 		return fmt.Errorf("couldn't get users in queue with error: %s", err)
 	}
 
-	updatedMessage := GetQueueMessage(callbackQuery.InlineMessageID, users, description)
+	updatedMessage := messages.GetQueueMessage(callbackQuery.InlineMessageID, users, description)
 	_, err = b.TgBot.Request(updatedMessage)
 	if err != nil {
 		return fmt.Errorf("couldn't go to menu with error: %s", err)
@@ -134,7 +135,7 @@ func (b Bot) GoToMenu(callbackQuery *tgbotapi.CallbackQuery) error {
 }
 
 func (b Bot) FinishQueue(callbackQuery *tgbotapi.CallbackQuery) error {
-	updatedMessage := GetFinishedMessage(callbackQuery.InlineMessageID)
+	updatedMessage := messages.GetFinishedMessage(callbackQuery.InlineMessageID)
 	_, err := b.TgBot.Request(updatedMessage)
 	if err != nil {
 		return fmt.Errorf("couldn't send finish queue with error: %s", err)
@@ -160,9 +161,9 @@ func (b Bot) sendQueueAfterStartMessage(callbackQuery *tgbotapi.CallbackQuery, c
 
 	var updatedMessage tgbotapi.EditMessageTextConfig
 	if currentPersonIndex == len(users) {
-		updatedMessage = GetEndQueueMessage(callbackQuery.InlineMessageID)
+		updatedMessage = messages.GetEndQueueMessage(callbackQuery.InlineMessageID)
 	} else {
-		updatedMessage = GetQueueAfterStartMessage(callbackQuery.InlineMessageID, description, users, currentPersonIndex)
+		updatedMessage = messages.GetQueueAfterStartMessage(callbackQuery.InlineMessageID, description, users, currentPersonIndex)
 	}
 
 	_, err = b.TgBot.Request(updatedMessage)

@@ -7,6 +7,7 @@ import (
 
 	"QueueBot/internal/logger"
 	"QueueBot/internal/steps"
+	"QueueBot/internal/telegram/messages"
 )
 
 const CreateQueueCommand = "create"
@@ -171,7 +172,7 @@ func (s BotServer) HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenI
 
 func (s BotServer) HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, errChan chan<- error) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
-	article.InputMessageContent = GetQueueMessageContent(inlineQuery.Query)
+	article.InputMessageContent = messages.GetQueueMessageContent(inlineQuery.Query)
 
 	keyboard := GetBeforeStartKeyboard()
 	article.ReplyMarkup = &keyboard

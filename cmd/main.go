@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -26,11 +25,15 @@ func main() {
 		tgBot.Debug = true
 	}
 
-	storage := sqlite.NewDatabase()
+	storage, err := sqlite.NewDatabase()
+	if err != nil {
+		logger.Fatalf("Couldn't initialize storage: %s", err)
+	}
+
 	defer func(storage *sqlite.SQLite) {
 		err := storage.Close()
 		if err != nil {
-			log.Fatalf("couldn't close storage")
+			logger.Fatalf("couldn't close storage")
 		}
 	}(storage)
 
