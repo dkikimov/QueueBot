@@ -2,6 +2,7 @@ package telegram
 
 import (
 	"fmt"
+	"log/slog"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
@@ -54,10 +55,13 @@ func (b Bot) SendForwardToMessage(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b Bot) Create(messageId string, description string) error {
+func (b Bot) CreateQueue(messageId string, description string) error {
 	if err := b.Storage.CreateQueue(messageId, description); err != nil {
 		return fmt.Errorf("couldn't create queue with error: %s", err)
 	}
+
+	slog.Info("Queue created successfully", "messageId", messageId, "description", description)
+
 	return nil
 }
 
@@ -86,6 +90,8 @@ func (b Bot) LogInOurOut(callbackQuery *tgbotapi.CallbackQuery) error {
 		return fmt.Errorf("couldn't update message with error: %s", err)
 	}
 
+	slog.Info("Logged in/out", "messageId", callbackQuery.InlineMessageID, "userId", callbackQuery.From.ID)
+
 	return nil
 }
 
@@ -99,6 +105,8 @@ func (b Bot) Start(callbackQuery *tgbotapi.CallbackQuery, isShuffled bool) error
 		return nil
 	}
 
+	slog.Info("Started queue", "messageId", callbackQuery.InlineMessageID, "isShuffled", isShuffled)
+
 	return b.sendQueueAfterStartMessage(callbackQuery, 0)
 }
 
@@ -106,8 +114,9 @@ func (b Bot) Next(callbackQuery *tgbotapi.CallbackQuery) error {
 	err, currentPersonIndex := b.Storage.IncrementCurrentPerson(callbackQuery.InlineMessageID)
 	if err != nil {
 		return fmt.Errorf("couldn't increment current person in queue %s with error: %s", callbackQuery.InlineMessageID, err)
-
 	}
+
+	slog.Info("Set next person", "messageId", callbackQuery.InlineMessageID, "currentPersonIndex", currentPersonIndex)
 
 	return b.sendQueueAfterStartMessage(callbackQuery, currentPersonIndex)
 }
@@ -131,6 +140,9 @@ func (b Bot) GoToMenu(callbackQuery *tgbotapi.CallbackQuery) error {
 	if err != nil {
 		return fmt.Errorf("couldn't go to menu with error: %s", err)
 	}
+
+	slog.Info("Went to menu", "messageId", callbackQuery.InlineMessageID)
+
 	return nil
 }
 
@@ -144,6 +156,8 @@ func (b Bot) FinishQueue(callbackQuery *tgbotapi.CallbackQuery) error {
 	if err = b.Storage.FinishQueueDeleteParticipants(callbackQuery.InlineMessageID); err != nil {
 		return fmt.Errorf("couldn't finish queue with error: %s", err)
 	}
+
+	slog.Info("Finished queue", "messageId", callbackQuery.InlineMessageID)
 
 	return nil
 }

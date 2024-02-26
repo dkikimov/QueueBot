@@ -6,15 +6,20 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"QueueBot/internal/models"
-	"QueueBot/internal/telegram"
 )
 
+const ForwardQueueToMessage = "Отлично! Теперь с помощью кнопки ниже вы можете переслать свою 'очередь'"
+const QueueDescription = "В очереди состоят:"
+const EndedQueue = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
+const FinishedQueue = "'Очередь' окончена 🎉"
+const ForwardQueueButton = "Переслать 'очередь'"
+
 func getMessageContentBeforeStart(title string, users []models.User) string {
-	return fmt.Sprintf("*%s*\n%s\n%s", title, telegram.QueueDescription, models.ListToString(users))
+	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, models.ListToString(users))
 }
 
 func getMessageContentAfterStart(title string, users []models.User, currentPersonIndex int) string {
-	return fmt.Sprintf("*%s*\n%s\n%s", title, telegram.QueueDescription, models.ListToStringWithCurrent(users, currentPersonIndex))
+	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, models.ListToStringWithCurrent(users, currentPersonIndex))
 }
 
 func GetQueueMessageContent(description string) tgbotapi.InputTextMessageContent {
@@ -26,7 +31,7 @@ func GetQueueMessageContent(description string) tgbotapi.InputTextMessageContent
 }
 
 func GetQueueMessage(messageID string, users []models.User, description string) tgbotapi.EditMessageTextConfig {
-	keyboard := telegram.GetBeforeStartKeyboard()
+	keyboard := GetBeforeStartKeyboard()
 	answer := tgbotapi.EditMessageTextConfig{
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: messageID,
@@ -39,7 +44,7 @@ func GetQueueMessage(messageID string, users []models.User, description string) 
 }
 
 func GetUpdatedQueueMessage(messageID string, description string, users []models.User) tgbotapi.EditMessageTextConfig {
-	keyboard := telegram.GetBeforeStartKeyboard()
+	keyboard := GetBeforeStartKeyboard()
 	answer := tgbotapi.EditMessageTextConfig{
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: messageID,
@@ -52,16 +57,16 @@ func GetUpdatedQueueMessage(messageID string, description string, users []models
 }
 
 func GetForwardMessage(chatId int64, description string) tgbotapi.MessageConfig {
-	answer := tgbotapi.NewMessage(chatId, telegram.ForwardQueueToMessage)
+	answer := tgbotapi.NewMessage(chatId, ForwardQueueToMessage)
 	answer.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonSwitch(telegram.ForwardQueueButton, description),
+		tgbotapi.NewInlineKeyboardButtonSwitch(ForwardQueueButton, description),
 	))
 	answer.ParseMode = tgbotapi.ModeMarkdown
 	return answer
 }
 
 func GetQueueAfterStartMessage(messageID string, description string, users []models.User, currentPersonIndex int) tgbotapi.EditMessageTextConfig {
-	keyboard := telegram.GetAfterStartKeyboard()
+	keyboard := GetAfterStartKeyboard()
 
 	answer := tgbotapi.EditMessageTextConfig{
 		BaseEdit: tgbotapi.BaseEdit{
@@ -75,14 +80,14 @@ func GetQueueAfterStartMessage(messageID string, description string, users []mod
 }
 
 func GetEndQueueMessage(messageID string) tgbotapi.EditMessageTextConfig {
-	keyboard := telegram.GetEndedQueueKeyboard()
+	keyboard := GetEndedQueueKeyboard()
 
 	answer := tgbotapi.EditMessageTextConfig{
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: messageID,
 			ReplyMarkup:     &keyboard,
 		},
-		Text: telegram.EndedQueue,
+		Text: EndedQueue,
 	}
 	return answer
 }
@@ -92,7 +97,7 @@ func GetFinishedMessage(messageID string) tgbotapi.EditMessageTextConfig {
 		BaseEdit: tgbotapi.BaseEdit{
 			InlineMessageID: messageID,
 		},
-		Text: telegram.FinishedQueue,
+		Text: FinishedQueue,
 	}
 	return answer
 }

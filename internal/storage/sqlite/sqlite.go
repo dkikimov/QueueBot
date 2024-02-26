@@ -109,7 +109,7 @@ func (sqlite *SQLite) ShuffleUsers(messageId string) error {
 	return nil
 }
 
-func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]models.User, error) {
+func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) (users []models.User, err error) {
 	row := sqlite.commands.isQueueShuffledStmt.QueryRow(messageId)
 
 	var isShuffled int
@@ -118,7 +118,6 @@ func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]models.Us
 	}
 
 	var rows *sql.Rows
-	var err error
 	if isShuffled == 1 {
 		rows, err = sqlite.commands.getUsersInQueueShuffledStmt.Query(messageId)
 		if err != nil {
@@ -131,9 +130,13 @@ func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]models.Us
 		}
 	}
 
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			err = fmt.Errorf("couldn't close rows in GetUsersInQueueCheckShuffle, messageId %s, isShuffled %t", messageId, isShuffled == 1)
+		}
+	}(rows)
 
-	var users []models.User
 	for rows.Next() {
 		var currentUser models.User
 		if err = rows.Scan(&currentUser.Id, &currentUser.Name); err != nil {
@@ -146,7 +149,7 @@ func (sqlite *SQLite) GetUsersInQueueCheckShuffle(messageId string) ([]models.Us
 		return nil, fmt.Errorf("error during iterating over users in queue with id %s: %s", messageId, err)
 	}
 
-	return users, nil
+	return users, err
 }
 
 func (sqlite *SQLite) StartQueue(messageId string, isShuffle bool) (error, bool) {
@@ -236,16 +239,20 @@ func (sqlite *SQLite) SetUserCurrentStep(userId int64, currentStep steps.ChatSte
 	return err
 }
 
-func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]models.User, error) {
+func (sqlite *SQLite) GetUsersInQueue(messageId string) (users []models.User, err error) {
 	rows, err := sqlite.commands.getUsersInQueueStmt.Query(messageId)
 
 	if err != nil {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			err = fmt.Errorf("couldn't close rows in GetUsersInQueue, messageId %s", messageId)
+		}
+	}(rows)
 
-	var users []models.User
 	for rows.Next() {
 		var currentUser models.User
 		if err = rows.Scan(&currentUser.Id, &currentUser.Name); err != nil {
@@ -258,7 +265,7 @@ func (sqlite *SQLite) GetUsersInQueue(messageId string) ([]models.User, error) {
 		return nil, fmt.Errorf("error during iterating over users in queue with id %s: %s", messageId, err)
 	}
 
-	return users, nil
+	return
 }
 
 func (sqlite *SQLite) CreateQueue(messageId string, description string) error {
