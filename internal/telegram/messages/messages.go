@@ -1,4 +1,4 @@
-package telegram
+package messages
 
 import (
 	"fmt"
@@ -7,6 +7,12 @@ import (
 
 	"QueueBot/internal/models"
 )
+
+const ForwardQueueToMessage = "Отлично! Теперь с помощью кнопки ниже вы можете переслать свою 'очередь'"
+const QueueDescription = "В очереди состоят:"
+const EndedQueue = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
+const FinishedQueue = "'Очередь' окончена 🎉"
+const ForwardQueueButton = "Переслать 'очередь'"
 
 func getMessageContentBeforeStart(title string, users []models.User) string {
 	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, models.ListToString(users))

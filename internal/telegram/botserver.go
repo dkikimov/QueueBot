@@ -2,11 +2,12 @@ package telegram
 
 import (
 	"fmt"
+	"log/slog"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"QueueBot/internal/logger"
 	"QueueBot/internal/steps"
+	"QueueBot/internal/telegram/messages"
 )
 
 const CreateQueueCommand = "create"
@@ -14,34 +15,11 @@ const StartCommand = "start"
 
 const CreateQueueMessage = "Окей. Теперь введи для чего предназначена эта очередь"
 const HelloMessage = "Привет! Я бот, предназначенный для создания очередей. \nДля этого введи команду /create"
-const ForwardQueueToMessage = "Отлично! Теперь с помощью кнопки ниже вы можете переслать свою 'очередь'"
-
-const QueueDescription = "В очереди состоят:"
-
-const EndedQueue = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
-const FinishedQueue = "'Очередь' окончена 🎉"
 
 const ActionCompleted = "Действие выполнено!"
 const ActionError = "Произошла ошибка"
 
 const CreateQueue = "Создать очередь"
-
-const LogInOurOutButton = "Добавиться/выйти из очереди"
-const ForwardQueueButton = "Переслать 'очередь'"
-
-const StartQueueButton = "Старт в порядке очереди"
-const StartQueueShuffleButton = "Старт в случайном порядке"
-
-const NextButton = "Следующий"
-const GoToMenuButton = "Перейти в меню"
-const FinishQueueButton = "Закончить"
-
-const LogInOurOutData = "log_in_our_out"
-const StartQueueData = "start_queue"
-const StartQueueShuffleData = "start_queue_shuffle"
-const NextData = "next_user"
-const GoToMenuData = "go_to_menu"
-const FinishQueueData = "finish_queue"
 
 type BotServer struct {
 	bot *Bot
@@ -53,7 +31,7 @@ func NewBotServer(bot *Bot) *BotServer {
 
 func (s BotServer) Listen(config tgbotapi.UpdateConfig, errChan chan<- error) {
 	updates := s.bot.TgBot.GetUpdatesChan(config)
-	logger.Printf("Bot started")
+	slog.Info("Started listening update channel")
 
 	for update := range updates {
 		switch {
@@ -114,32 +92,32 @@ func (s BotServer) HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, er
 	// Сверяемся со скрытыми данными, заложенными в сообщении для определения команды
 	wasError := false
 	switch callbackQuery.Data {
-	case LogInOurOutData:
+	case messages.LogInOurOutData:
 		if err := s.bot.LogInOurOut(callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't login or logout with error: %s", err)
 			wasError = true
 		}
-	case StartQueueData:
+	case messages.StartQueueData:
 		if err := s.bot.Start(callbackQuery, false); err != nil {
 			errChan <- fmt.Errorf("couldn't start queue with error: %s", err)
 			wasError = true
 		}
-	case StartQueueShuffleData:
+	case messages.StartQueueShuffleData:
 		if err := s.bot.Start(callbackQuery, true); err != nil {
 			errChan <- fmt.Errorf("couldn't start queue with shuffle with error: %s", err)
 			wasError = true
 		}
-	case NextData:
+	case messages.NextData:
 		if err := s.bot.Next(callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't go to next person with error: %s", err)
 			wasError = true
 		}
-	case GoToMenuData:
+	case messages.GoToMenuData:
 		if err := s.bot.GoToMenu(callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't go to menu with error: %s", err)
 			wasError = true
 		}
-	case FinishQueueData:
+	case messages.FinishQueueData:
 		if err := s.bot.FinishQueue(callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't finish queue with error: %s", err)
 			wasError = true
@@ -164,16 +142,16 @@ func (s BotServer) HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenI
 		chosenInlineResult.Query = chosenInlineResult.Query[:100]
 	}
 
-	if err := s.bot.Create(chosenInlineResult.InlineMessageID, chosenInlineResult.Query); err != nil {
+	if err := s.bot.CreateQueue(chosenInlineResult.InlineMessageID, chosenInlineResult.Query); err != nil {
 		errChan <- err
 	}
 }
 
 func (s BotServer) HandleInlineQuery(inlineQuery *tgbotapi.InlineQuery, errChan chan<- error) {
 	article := tgbotapi.NewInlineQueryResultArticle(inlineQuery.ID, CreateQueue, fmt.Sprintf("С описанием: %s", inlineQuery.Query))
-	article.InputMessageContent = GetQueueMessageContent(inlineQuery.Query)
+	article.InputMessageContent = messages.GetQueueMessageContent(inlineQuery.Query)
 
-	keyboard := GetBeforeStartKeyboard()
+	keyboard := messages.GetBeforeStartKeyboard()
 	article.ReplyMarkup = &keyboard
 
 	inlineConf := tgbotapi.InlineConfig{

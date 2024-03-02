@@ -2,31 +2,33 @@ package main
 
 import (
 	"log"
-	"os"
+	"log/slog"
 
 	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"QueueBot/internal/logger"
+	"QueueBot/config"
 	"QueueBot/internal/storage/sqlite"
 	"QueueBot/internal/telegram"
 )
 
 func main() {
-	botToken, exists := os.LookupEnv("BOT_TOKEN")
-	if exists == false {
-		logger.Fatalf("Bot token is not provided")
-	}
-
-	tgBot, err := tgBotApi.NewBotAPI(botToken)
+	cfg, err := config.NewConfig()
 	if err != nil {
-		logger.Fatalf("Couldn't initialize bot with error: %s", err.Error())
+		log.Fatalf("Couldn't create config: %s", err)
 	}
 
-	if os.Getenv("DEBUG") == "true" {
-		tgBot.Debug = true
+	tgBot, err := tgBotApi.NewBotAPI(cfg.BotToken)
+	if err != nil {
+		log.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
 
-	storage := sqlite.NewDatabase()
+	tgBot.Debug = cfg.IsDebug
+
+	storage, err := sqlite.NewDatabase(cfg.DatabasePath)
+	if err != nil {
+		log.Fatalf("Couldn't initialize storage: %s", err)
+	}
+
 	defer func(storage *sqlite.SQLite) {
 		err := storage.Close()
 		if err != nil {
@@ -47,7 +49,7 @@ func main() {
 
 	for err := range errChan {
 		if err != nil {
-			logger.Println(err.Error())
+			slog.Error(err.Error())
 		}
 	}
 }
