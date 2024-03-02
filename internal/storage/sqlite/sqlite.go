@@ -276,8 +276,8 @@ func (sqlite *SQLite) CreateQueue(messageId string, description string) error {
 	return nil
 }
 
-func NewDatabase() (*SQLite, error) {
-	db, err := sql.Open("sqlite3", "./database.sqlite3?cache=shared")
+func NewDatabase(databasePath string) (*SQLite, error) {
+	db, err := sql.Open("sqlite3", fmt.Sprintf("%s?cache=shared", databasePath))
 
 	if err != nil {
 		return nil, fmt.Errorf("couldn't open database: %s", err)

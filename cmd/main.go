@@ -3,30 +3,28 @@ package main
 import (
 	"log"
 	"log/slog"
-	"os"
 
 	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"QueueBot/config"
 	"QueueBot/internal/storage/sqlite"
 	"QueueBot/internal/telegram"
 )
 
 func main() {
-	botToken, exists := os.LookupEnv("BOT_TOKEN")
-	if exists == false {
-		log.Fatalf("Bot token is not provided")
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatalf("Couldn't create config: %s", err)
 	}
 
-	tgBot, err := tgBotApi.NewBotAPI(botToken)
+	tgBot, err := tgBotApi.NewBotAPI(cfg.BotToken)
 	if err != nil {
 		log.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
 
-	if os.Getenv("DEBUG") == "true" {
-		tgBot.Debug = true
-	}
+	tgBot.Debug = cfg.IsDebug
 
-	storage, err := sqlite.NewDatabase()
+	storage, err := sqlite.NewDatabase(cfg.DatabasePath)
 	if err != nil {
 		log.Fatalf("Couldn't initialize storage: %s", err)
 	}
