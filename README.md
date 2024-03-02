@@ -33,7 +33,7 @@
 
    ```bash
    go build cmd/main.go
-   BOT_TOKEN={your_token} DEBUG={true or false} ./main
+   BOT_TOKEN={your_token} DEBUG={true or false} DATABASE_PATH={path} ./main
    ```
 
 ### Docker way
@@ -48,6 +48,7 @@
    ```
    BOT_TOKEN=your_token
    DEBUG=true     (false is default)
+   DATABASE_PATH=path
    ```
 
 3. **Create and run container:**
@@ -55,16 +56,7 @@
    ```bash
    docker run --env-file .env --rm queue-bot 
    ```
-## Contributing
+   
+## Authors
 
-Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-* If you have suggestions for adding or removing projects, feel free to [open an issue](https://github.com/dkikimov/QueueBot/issues/new) to discuss it, or directly create a pull request after you edit the *README.md* file with necessary changes.
-* Create individual PR for each suggestion.
-
-### Creating A Pull Request
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+* [Kikimov Daniil](https://github.com/dkikimov/)
