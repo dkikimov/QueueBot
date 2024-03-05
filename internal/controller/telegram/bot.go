@@ -24,17 +24,9 @@ func NewAppBot(tgBot *tgbotapi.BotAPI, u usecase.Bot) *Bot {
 
 func (b Bot) SendHelloMessage(ctx context.Context, message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, HelloMessage)
+
 	if _, err := b.TgBot.Send(msg); err != nil {
 		return fmt.Errorf("couldn't send hello message in telegram with error: %s", err)
-	}
-
-	return nil
-}
-
-func (b Bot) SendMessageToCreateQueue(ctx context.Context, message *tgbotapi.Message) error {
-	msg := tgbotapi.NewMessage(message.Chat.ID, CreateQueueMessage)
-	if _, err := b.TgBot.Send(msg); err != nil {
-		return fmt.Errorf("couldn't send create queue message with error: %s", err)
 	}
 
 	return nil
