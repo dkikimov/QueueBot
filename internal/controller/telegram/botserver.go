@@ -3,11 +3,14 @@ package telegram
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
+	"net/http"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"QueueBot/config"
 	"QueueBot/internal/controller/telegram/messages"
 )
 
@@ -22,40 +25,67 @@ const ActionError = "Произошла ошибка"
 const CreateQueue = "Создать очередь"
 
 type BotServer struct {
-	bot *Bot
+	bot    *Bot
+	config *config.Config
 }
 
-func NewBotServer(bot *Bot) *BotServer {
-	return &BotServer{bot: bot}
+func NewBotServer(bot *Bot, config *config.Config) *BotServer {
+	return &BotServer{bot: bot, config: config}
 }
 
-func (s BotServer) Listen(config tgbotapi.UpdateConfig, errChan chan<- error) {
-	updates := s.bot.TgBot.GetUpdatesChan(config)
-	slog.Info("Started listening update channel")
+func (s BotServer) setWebhook() {
+
+}
+
+func (s BotServer) Listen(errChan chan<- error) {
+	wh, _ := tgbotapi.NewWebhookWithCert(fmt.Sprintf(
+		"https://%s:%s/%s",
+		s.config.BotAddress,
+		s.config.BotPort,
+		s.config.BotToken,
+	), tgbotapi.FilePath(s.config.CertPath))
+
+	_, err := s.bot.TgBot.Request(wh)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	info, err := s.bot.TgBot.GetWebhookInfo()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if info.LastErrorDate != 0 {
+		log.Printf("Telegram callback failed: %s", info.LastErrorMessage)
+	}
+
+	updates := s.bot.TgBot.ListenForWebhook("/" + s.config.BotToken)
+	// TODO: Graceful shutdown
+	go http.ListenAndServeTLS(fmt.Sprintf("%s:%s", s.config.BotAddress, s.config.BotPort), s.config.CertPath, s.config.KeyPath, nil)
+
+	slog.Info("Started listening updates channel")
 
 	for update := range updates {
 		go func(update tgbotapi.Update) {
 			switch {
 			case update.Message != nil:
-				if err := s.HandleMessage(update.Message); err != nil {
+				if err = s.HandleMessage(update.Message); err != nil {
 					errChan <- fmt.Errorf("couldn't handle message: %w", err)
 				}
 			case update.CallbackQuery != nil:
-
-				if err := s.HandleCallbackQuery(update.CallbackQuery); err != nil {
+				if err = s.HandleCallbackQuery(update.CallbackQuery); err != nil {
 					errChan <- fmt.Errorf("couldn't handle callback query: %w", err)
 				}
 			case update.InlineQuery != nil:
-				if err := s.HandleInlineQuery(update.InlineQuery); err != nil {
+				if err = s.HandleInlineQuery(update.InlineQuery); err != nil {
 					errChan <- fmt.Errorf("couldn't handle inline query: %w", err)
 				}
 			case update.ChosenInlineResult != nil:
-				if err := s.HandleChosenInlineResult(update.ChosenInlineResult); err != nil {
+				if err = s.HandleChosenInlineResult(update.ChosenInlineResult); err != nil {
 					errChan <- fmt.Errorf("couldn't handle chosen inline result: %w", err)
 				}
 			}
 		}(update)
-
 	}
 }
 

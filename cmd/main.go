@@ -48,14 +48,11 @@ func main() {
 
 	botUseCase := usecase.NewBotUseCase(storage)
 	bot := telegram.NewAppBot(botApi, botUseCase)
-	server := telegram.NewBotServer(bot)
-
-	updateConfig := tgBotApi.NewUpdate(0)
-	updateConfig.Timeout = 30
+	server := telegram.NewBotServer(bot, cfg)
 
 	errChan := make(chan error)
 
-	go server.Listen(updateConfig, errChan)
+	go server.Listen(errChan)
 
 	for err := range errChan {
 		if err != nil {

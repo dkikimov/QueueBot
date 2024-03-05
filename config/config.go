@@ -11,6 +11,11 @@ type Config struct {
 	IsTelegramDebug bool   `env:"TELEGRAM_DEBUG" env-default:"false"`
 	IsAppDebug      bool   `env:"APP_DEBUG" env-default:"false"`
 	DatabasePath    string `env:"DATABASE_PATH" env-required:"true"`
+
+	CertPath   string `env:"CERT_PATH" env-required:"true"`
+	KeyPath    string `env:"KEY_PATH" env-required:"true"`
+	BotAddress string `env:"BOT_ADDRESS" env-required:"true"`
+	BotPort    string `env:"BOT_PORT" env-required:"true"`
 }
 
 func NewConfig() (*Config, error) {
