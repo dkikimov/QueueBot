@@ -1,20 +1,21 @@
 package telegram
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"QueueBot/internal/steps"
-	"QueueBot/internal/telegram/messages"
+	"QueueBot/internal/controller/telegram/messages"
 )
 
-const CreateQueueCommand = "create"
 const StartCommand = "start"
 
 const CreateQueueMessage = "Окей. Теперь введи для чего предназначена эта очередь"
-const HelloMessage = "Привет! Я бот, предназначенный для создания очередей. \nДля этого введи команду /create"
+const HelloMessage = `Привет! Я бот, предназначенный для создания очередей. 
+Введи описание своей очереди, а я тебе ее создам`
 
 const ActionCompleted = "Действие выполнено!"
 const ActionError = "Произошла ошибка"
@@ -52,73 +53,52 @@ func (s BotServer) HandleMessage(message *tgbotapi.Message, errChan chan<- error
 	// Если да, отправляем соотвутствующее сообщение
 	switch message.Command() {
 	case StartCommand:
-		if err := s.bot.SendHelloMessage(message); err != nil {
+		if err := s.bot.SendHelloMessage(context.Background(), message); err != nil {
 			errChan <- fmt.Errorf("sendHelloMessage error occured: %s", err)
-			return
-		}
-		return
-	case CreateQueueCommand:
-		if err := s.bot.SendMessageToCreateQueue(message); err != nil {
-			errChan <- fmt.Errorf("sendMessageToCreateMessage error occured: %s", err)
 			return
 		}
 		return
 	}
 
-	// В случае, если сообщение не команда
-	// Получаем текущее состояние пользователя для понимания какое действие ожидается быть следующим
-	currentStep, err := s.bot.Storage.GetUserCurrentStep(message.From.ID)
-	if err != nil {
-		errChan <- fmt.Errorf("couldn't get current user step with error: %s", err)
-	}
-
-	switch currentStep {
-	case steps.Menu:
-		if err := s.bot.SendHelloMessage(message); err != nil {
-			errChan <- fmt.Errorf("sendHelloMessage error occured: %s", err)
-			return
-		}
-	case steps.EnteringDescription:
-		if err := s.bot.SendForwardToMessage(message); err != nil {
-			errChan <- fmt.Errorf("sendForwardMessage error occured: %s", err)
-			return
-		}
-	default:
-		errChan <- fmt.Errorf("got current step (%v) that is not implemented", currentStep)
+	if err := s.bot.SendMessageToCreateQueue(context.Background(), message); err != nil {
+		errChan <- fmt.Errorf("sendMessageToCreateMessage error occured: %s", err)
 	}
 }
 
 func (s BotServer) HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, errChan chan<- error) {
 	// Сверяемся со скрытыми данными, заложенными в сообщении для определения команды
+	startTime := time.Now()
+	slog.Debug("Got callback query with data: ", "data", callbackQuery.Data)
+
 	wasError := false
 	switch callbackQuery.Data {
 	case messages.LogInOurOutData:
-		if err := s.bot.LogInOurOut(callbackQuery); err != nil {
+		if err := s.bot.LogInOurOut(context.Background(), callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't login or logout with error: %s", err)
 			wasError = true
 		}
 	case messages.StartQueueData:
-		if err := s.bot.Start(callbackQuery, false); err != nil {
+		if err := s.bot.Start(context.Background(), callbackQuery, false); err != nil {
 			errChan <- fmt.Errorf("couldn't start queue with error: %s", err)
 			wasError = true
 		}
 	case messages.StartQueueShuffleData:
-		if err := s.bot.Start(callbackQuery, true); err != nil {
+		if err := s.bot.Start(context.Background(), callbackQuery, true); err != nil {
 			errChan <- fmt.Errorf("couldn't start queue with shuffle with error: %s", err)
 			wasError = true
 		}
 	case messages.NextData:
-		if err := s.bot.Next(callbackQuery); err != nil {
+		if err := s.bot.Next(context.Background(), callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't go to next person with error: %s", err)
 			wasError = true
 		}
 	case messages.GoToMenuData:
-		if err := s.bot.GoToMenu(callbackQuery); err != nil {
+		if err := s.bot.GoToMenu(context.Background(), callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't go to menu with error: %s", err)
 			wasError = true
 		}
 	case messages.FinishQueueData:
-		if err := s.bot.FinishQueue(callbackQuery); err != nil {
+		if err := s.bot.FinishQueue(context.Background(), callbackQuery); err != nil {
 			errChan <- fmt.Errorf("couldn't finish queue with error: %s", err)
 			wasError = true
 		}
@@ -134,6 +114,8 @@ func (s BotServer) HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery, er
 		errChan <- fmt.Errorf("couldn't process next_data callback with error: %s", err)
 		return
 	}
+
+	slog.Debug("Processed callback query with data: ", "data", callbackQuery.Data, "elapsed", time.Now().Sub(startTime).String())
 }
 
 func (s BotServer) HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenInlineResult, errChan chan<- error) {
@@ -142,7 +124,7 @@ func (s BotServer) HandleChosenInlineResult(chosenInlineResult *tgbotapi.ChosenI
 		chosenInlineResult.Query = chosenInlineResult.Query[:100]
 	}
 
-	if err := s.bot.CreateQueue(chosenInlineResult.InlineMessageID, chosenInlineResult.Query); err != nil {
+	if err := s.bot.CreateQueue(context.Background(), chosenInlineResult.InlineMessageID, chosenInlineResult.Query); err != nil {
 		errChan <- err
 	}
 }

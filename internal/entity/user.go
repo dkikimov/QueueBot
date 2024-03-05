@@ -1,4 +1,4 @@
-package models
+package entity
 
 import (
 	"fmt"
@@ -22,14 +22,15 @@ func ListToString(users []User) (result string) {
 	return sb.String()
 }
 
-func ListToStringWithCurrent(users []User, currentUser int) (result string) {
+func ListToStringWithCurrent(users []User, currentUser int) string {
+	sb := strings.Builder{}
 	for idx, user := range users {
 		if currentUser == idx {
-			result += fmt.Sprintf("-> %s <-\n", user.Name)
+			sb.WriteString(fmt.Sprintf("-> %s <-\n", user.Name))
 		} else {
-			result += user.Name + "\n"
+			sb.WriteString(user.Name + "\n")
 		}
-
 	}
-	return result
+
+	return sb.String()
 }
