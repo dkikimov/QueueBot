@@ -1,0 +1,91 @@
+run:
+  timeout: 5m
+  modules-download-mode: mod
+linters-settings:
+  nlreturn:
+    block-size: 3
+
+  cyclop:
+    max-complexity: 15
+
+  godot:
+    scope: declarations
+
+  gci:
+    local-prefixes: QueueBot
+
+  nestif:
+    min-complexity: 5
+
+  tagliatelle:
+    # check the struct tag name case
+    case:
+      # use the struct field name to check the name of the struct tag
+      use-field-name: false
+      rules:
+        # any struct tag type can be used.
+        # support string case: `camel`, `pascal`, `kebab`, `snake`, `goCamel`,
+        #`goPascal`, `goKebab`, `goSnake`, `upper`, `lower`
+        json: snake
+        yaml: snake
+        xml: camel
+        bson: camel
+        avro: camel
+        mapstructure: kebab
+linters:
+  fast: false
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - cyclop
+    - depguard
+    - dogsled
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - gci
+    - goconst
+    - gocritic
+    - godot
+    - goerr113
+    - gofmt
+    - gofumpt
+    - goheader
+    - goimports
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nlreturn
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - stylecheck
+    - tagliatelle
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
+    - whitespace
