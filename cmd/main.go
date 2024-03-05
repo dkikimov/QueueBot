@@ -38,13 +38,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Couldn't initialize storage: %s", err)
 	}
-	//
-	// defer func(storage *sqlite.Database) {
-	// 	err := storage.Close()
-	// 	if err != nil {
-	// 		log.Fatalf("couldn't close storage")
-	// 	}
-	// }(storage)
+
+	defer func(storage *sqlite.Database) {
+		err := storage.Close()
+		if err != nil {
+			log.Fatalf("couldn't close storage")
+		}
+	}(storage)
 
 	botUseCase := usecase.NewBotUseCase(storage)
 	bot := telegram.NewAppBot(botApi, botUseCase)

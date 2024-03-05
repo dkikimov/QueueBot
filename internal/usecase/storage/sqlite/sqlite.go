@@ -14,6 +14,10 @@ type Database struct {
 	db *sql.DB
 }
 
+func (s Database) Close() error {
+	return s.db.Close()
+}
+
 func (s Database) CreateQueue(ctx context.Context, messageId string, description string) error {
 	createQueueStmt, err := s.db.PrepareContext(ctx, "INSERT INTO queues (message_id, description) VALUES (?, ?)")
 	if err != nil {

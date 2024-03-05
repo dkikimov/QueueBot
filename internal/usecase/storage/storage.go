@@ -14,4 +14,6 @@ type Storage interface {
 	StartQueue(ctx context.Context, messageId string, isShuffle bool) error
 	IncrementCurrentPerson(ctx context.Context, messageId string) error
 	DeleteQueue(ctx context.Context, messageId string) error
+
+	Close() error
 }
