@@ -7,9 +7,10 @@ import (
 )
 
 type Config struct {
-	BotToken     string `env:"BOT_TOKEN" env-required:"true"`
-	IsDebug      bool   `env:"DEBUG" env-default:"false"`
-	DatabasePath string `env:"DATABASE_PATH" env-required:"true"`
+	BotToken        string `env:"BOT_TOKEN" env-required:"true"`
+	IsTelegramDebug bool   `env:"TELEGRAM_DEBUG" env-default:"false"`
+	IsAppDebug      bool   `env:"APP_DEBUG" env-default:"false"`
+	DatabasePath    string `env:"DATABASE_PATH" env-required:"true"`
 }
 
 func NewConfig() (*Config, error) {

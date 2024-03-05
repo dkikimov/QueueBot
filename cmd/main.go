@@ -20,7 +20,7 @@ func main() {
 	}
 
 	var programLevel = new(slog.LevelVar)
-	if cfg.IsDebug {
+	if cfg.IsAppDebug {
 		programLevel.Set(slog.LevelDebug)
 	}
 
@@ -32,7 +32,7 @@ func main() {
 		log.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
 
-	botApi.Debug = cfg.IsDebug
+	botApi.Debug = cfg.IsTelegramDebug
 
 	storage, err := sqlite.NewDatabase(cfg.DatabasePath)
 	if err != nil {
