@@ -61,18 +61,18 @@ func (b Bot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQu
 		return fmt.Errorf("couldn't add user to queue with error: %s", err)
 	}
 
-	slog.Debug("Logged in/out locally", "elapsed", time.Now().Sub(startTime).String())
+	slog.Debug("Logged in/out locally", "elapsed", time.Since(startTime).String())
 
 	queue, err := b.u.GetQueue(ctx, callbackQuery.InlineMessageID)
 	if err != nil {
 		return fmt.Errorf("couldn't get queue with error: %s", err)
 	}
 
-	slog.Debug("Got queue", "elapsed", time.Now().Sub(startTime).String())
+	slog.Debug("Got queue", "elapsed", time.Since(startTime).String())
 
 	updatedMessage := messages.GetUpdatedQueueMessage(callbackQuery.InlineMessageID, queue.Description, queue.Users)
 
-	slog.Debug("Got updated queue message", "elapsed", time.Now().Sub(startTime).String())
+	slog.Debug("Got updated queue message", "elapsed", time.Since(startTime).String())
 
 	_, err = b.TgBot.Request(updatedMessage)
 	if err != nil {
@@ -83,7 +83,7 @@ func (b Bot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQu
 		"Logged in/out and sent updated message",
 		"messageId", callbackQuery.InlineMessageID,
 		"userId", callbackQuery.From.ID,
-		"elapsed", time.Now().Sub(startTime).String(),
+		"elapsed", time.Since(startTime).String(),
 	)
 
 	return nil

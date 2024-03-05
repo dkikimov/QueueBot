@@ -130,7 +130,7 @@ func (s BotServer) HandleCallbackQuery(callbackQuery *tgbotapi.CallbackQuery) er
 		return fmt.Errorf("couldn't process next_data callback with error: %w", err)
 	}
 
-	slog.Debug("Processed callback query with data: ", "data", callbackQuery.Data, "elapsed", time.Now().Sub(startTime).String())
+	slog.Debug("Processed callback query with data: ", "data", callbackQuery.Data, "elapsed", time.Since(startTime).String())
 	return nil
 }
 

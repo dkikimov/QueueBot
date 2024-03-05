@@ -96,6 +96,10 @@ func (s Database) GetQueue(ctx context.Context, messageId string) (entity.Queue,
 
 func (s Database) StartQueue(ctx context.Context, messageId string, isShuffle bool) error {
 	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("couldn't begin transaction: %w", err)
+	}
+
 	setCurrentUserIndexStmt, err := tx.PrepareContext(ctx, "UPDATE queues SET current_user_index = 0 WHERE message_id = ?")
 	if err != nil {
 		return fmt.Errorf("couldn't prepare set current user index statement: %w", err)
@@ -106,7 +110,7 @@ func (s Database) StartQueue(ctx context.Context, messageId string, isShuffle bo
 		return fmt.Errorf("couldn't set current user index: %w", err)
 	}
 
-	if isShuffle == false {
+	if !isShuffle {
 		startStmt, err := tx.PrepareContext(ctx, `UPDATE participants SET order_number = dense_rank FROM 
                                                       (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id FROM participants WHERE message_id = ?)
                                                           AS sub WHERE participants.user_id = sub.user_id AND message_id = ?`)
