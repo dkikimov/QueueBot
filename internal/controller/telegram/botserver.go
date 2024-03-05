@@ -64,12 +64,12 @@ func (s BotServer) HandleMessage(message *tgbotapi.Message) error {
 	// Если да, отправляем соотвутствующее сообщение
 	switch message.Command() {
 	case StartCommand:
-		if err := s.bot.SendHelloMessage(context.Background(), message); err != nil {
+		if err := s.bot.SendHelloMessage(message); err != nil {
 			return fmt.Errorf("sendHelloMessage error occured: %w", err)
 		}
 	}
 
-	if err := s.bot.SendForwardMessageButton(context.Background(), message); err != nil {
+	if err := s.bot.SendForwardMessageButton(message); err != nil {
 		return fmt.Errorf("sendMessageToCreateMessage error occured: %w", err)
 	}
 

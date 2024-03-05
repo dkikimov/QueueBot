@@ -22,7 +22,7 @@ func NewAppBot(tgBot *tgbotapi.BotAPI, u usecase.Bot) *Bot {
 	return &Bot{TgBot: tgBot, u: u}
 }
 
-func (b Bot) SendHelloMessage(ctx context.Context, message *tgbotapi.Message) error {
+func (b Bot) SendHelloMessage(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, HelloMessage)
 
 	if _, err := b.TgBot.Send(msg); err != nil {
@@ -32,7 +32,7 @@ func (b Bot) SendHelloMessage(ctx context.Context, message *tgbotapi.Message) er
 	return nil
 }
 
-func (b Bot) SendForwardMessageButton(ctx context.Context, message *tgbotapi.Message) error {
+func (b Bot) SendForwardMessageButton(message *tgbotapi.Message) error {
 	msg := messages.GetForwardMessage(message.Chat.ID, message.Text)
 	if _, err := b.TgBot.Send(msg); err != nil {
 		return fmt.Errorf("couldn't send forward to message in telegram with error: %s", err)
