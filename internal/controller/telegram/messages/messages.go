@@ -8,11 +8,13 @@ import (
 	"QueueBot/internal/entity"
 )
 
-const ForwardQueueToMessage = "Отлично! Теперь с помощью кнопки ниже вы можете переслать свою 'очередь'"
-const QueueDescription = "В очереди состоят:"
-const EndedQueue = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
-const FinishedQueue = "'Очередь' окончена 🎉"
-const ForwardQueueButton = "Переслать 'очередь'"
+const (
+	ForwardQueueToMessage = "Отлично! Теперь с помощью кнопки ниже вы можете переслать свою 'очередь'"
+	QueueDescription      = "В очереди состоят:"
+	EndedQueue            = "Участники закончились, значит и очередь тоже. Что делаем дальше?"
+	FinishedQueue         = "'Очередь' окончена 🎉"
+	ForwardQueueButton    = "Переслать 'очередь'"
+)
 
 func getMessageContentBeforeStart(title string, users []entity.User) string {
 	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, entity.ListToString(users))
@@ -27,6 +29,7 @@ func GetQueueMessageContent(description string) tgbotapi.InputTextMessageContent
 		Text:      getMessageContentBeforeStart(description, nil),
 		ParseMode: tgbotapi.ModeMarkdown,
 	}
+
 	return answer
 }
 
@@ -40,6 +43,7 @@ func GetQueueMessage(messageID string, users []entity.User, description string) 
 		Text:      getMessageContentBeforeStart(description, users),
 		ParseMode: tgbotapi.ModeMarkdown,
 	}
+
 	return answer
 }
 
@@ -53,15 +57,17 @@ func GetUpdatedQueueMessage(messageID string, description string, users []entity
 		Text:      getMessageContentBeforeStart(description, users),
 		ParseMode: tgbotapi.ModeMarkdown,
 	}
+
 	return answer
 }
 
-func GetForwardMessage(chatId int64, description string) tgbotapi.MessageConfig {
-	answer := tgbotapi.NewMessage(chatId, ForwardQueueToMessage)
+func GetForwardMessage(chatID int64, description string) tgbotapi.MessageConfig {
+	answer := tgbotapi.NewMessage(chatID, ForwardQueueToMessage)
 	answer.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonSwitch(ForwardQueueButton, description),
 	))
 	answer.ParseMode = tgbotapi.ModeMarkdown
+
 	return answer
 }
 
@@ -76,6 +82,7 @@ func GetQueueAfterStartMessage(messageID string, description string, users []ent
 		Text:      getMessageContentAfterStart(description, users, currentPersonIndex),
 		ParseMode: tgbotapi.ModeMarkdown,
 	}
+
 	return answer
 }
 
@@ -89,6 +96,7 @@ func GetEndQueueMessage(messageID string) tgbotapi.EditMessageTextConfig {
 		},
 		Text: EndedQueue,
 	}
+
 	return answer
 }
 
@@ -99,5 +107,6 @@ func GetFinishedMessage(messageID string) tgbotapi.EditMessageTextConfig {
 		},
 		Text: FinishedQueue,
 	}
+
 	return answer
 }

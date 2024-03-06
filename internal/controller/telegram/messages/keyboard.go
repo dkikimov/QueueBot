@@ -6,19 +6,25 @@ import (
 
 const LogInOurOutButton = "Добавиться/выйти из очереди"
 
-const StartQueueButton = "Старт в порядке очереди"
-const StartQueueShuffleButton = "Старт в случайном порядке"
+const (
+	StartQueueButton        = "Старт в порядке очереди"
+	StartQueueShuffleButton = "Старт в случайном порядке"
+)
 
-const NextButton = "Следующий"
-const GoToMenuButton = "Перейти в меню"
-const FinishQueueButton = "Закончить"
+const (
+	NextButton        = "Следующий"
+	GoToMenuButton    = "Перейти в меню"
+	FinishQueueButton = "Закончить"
+)
 
-const LogInOurOutData = "log_in_our_out"
-const StartQueueData = "start_queue"
-const StartQueueShuffleData = "start_queue_shuffle"
-const NextData = "next_user"
-const GoToMenuData = "go_to_menu"
-const FinishQueueData = "finish_queue"
+const (
+	LogInOurOutData       = "log_in_our_out"
+	StartQueueData        = "start_queue"
+	StartQueueShuffleData = "start_queue_shuffle"
+	NextData              = "next_user"
+	GoToMenuData          = "go_to_menu"
+	FinishQueueData       = "finish_queue"
+)
 
 func GetBeforeStartKeyboard() tgbotapi.InlineKeyboardMarkup {
 	keyboard := tgbotapi.NewInlineKeyboardMarkup(

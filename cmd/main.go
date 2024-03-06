@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"os"
 
-	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"QueueBot/config"
 	"QueueBot/internal/controller/telegram"
@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Couldn't create config: %s", err)
 	}
 
-	var programLevel = new(slog.LevelVar)
+	programLevel := new(slog.LevelVar)
 	if cfg.IsAppDebug {
 		programLevel.Set(slog.LevelDebug)
 	}
@@ -27,12 +27,12 @@ func main() {
 	h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
 	slog.SetDefault(slog.New(h))
 
-	botApi, err := tgBotApi.NewBotAPI(cfg.BotToken)
+	botAPI, err := tgbotapi.NewBotAPI(cfg.BotToken)
 	if err != nil {
 		log.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
 
-	botApi.Debug = cfg.IsTelegramDebug
+	botAPI.Debug = cfg.IsTelegramDebug
 
 	storage, err := sqlite.NewDatabase(cfg.DatabasePath)
 	if err != nil {
@@ -47,10 +47,10 @@ func main() {
 	}(storage)
 
 	botUseCase := usecase.NewBotUseCase(storage)
-	bot := telegram.NewAppBot(botApi, botUseCase)
+	bot := telegram.NewAppBot(botAPI, botUseCase)
 	server := telegram.NewBotServer(bot)
 
-	updateConfig := tgBotApi.NewUpdate(0)
+	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 
 	errChan := make(chan error)
