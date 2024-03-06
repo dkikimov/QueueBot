@@ -33,7 +33,7 @@
 
    ```bash
    go build cmd/main.go
-   BOT_TOKEN={your_token} DEBUG={true or false} DATABASE_PATH={path} ./main
+   BOT_TOKEN={your_token} APP_DEBUG={true or false} TELEGRAM_DEBUG={true or false} DATABASE_PATH={path} ./main
    ```
 
 ### Docker way
@@ -47,8 +47,10 @@
 
    ```
    BOT_TOKEN=your_token
-   DEBUG=true     (false is default)
+   APP_DEBUG=true
+   TELEGRAM_DEBUG=true
    DATABASE_PATH=path
+   
    ```
 
 3. **Create and run container:**
