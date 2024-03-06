@@ -75,8 +75,8 @@ func (s Database) GetQueue(ctx context.Context, messageID string) (entity.Queue,
 	if err != nil {
 		return entity.Queue{}, fmt.Errorf("couldn't get users from queue %s: %w", messageID, err)
 	}
-
 	defer rows.Close()
+
 	var users []entity.User
 
 	for rows.Next() {
@@ -99,7 +99,7 @@ func (s Database) GetQueue(ctx context.Context, messageID string) (entity.Queue,
 	}, nil
 }
 
-func updateParticipantsShuffle(ctx context.Context, tx *sql.Tx, messageID string) error {
+func updateParticipantsInorder(ctx context.Context, tx *sql.Tx, messageID string) error {
 	startStmt, err := tx.PrepareContext(ctx, `UPDATE participants SET order_number = dense_rank FROM 
                                                       (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id FROM participants WHERE message_id = ?)
                                                           AS sub WHERE participants.user_id = sub.user_id AND message_id = ?`)
@@ -116,7 +116,7 @@ func updateParticipantsShuffle(ctx context.Context, tx *sql.Tx, messageID string
 	return nil
 }
 
-func updateParticipantsInorder(ctx context.Context, tx *sql.Tx, messageID string) error {
+func updateParticipantsShuffle(ctx context.Context, tx *sql.Tx, messageID string) error {
 	startStmt, err := tx.PrepareContext(ctx, `UPDATE participants
 														SET order_number = random()
 														WHERE message_id = ?;`)
@@ -209,7 +209,7 @@ func (s Database) DeleteQueue(ctx context.Context, messageID string) error {
 		return fmt.Errorf("couldn't delete participants: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("couldn't commit transaction: %w", err)
 	}
 
