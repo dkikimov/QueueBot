@@ -1,4 +1,4 @@
-package telegram
+package client
 
 import (
 	"context"
@@ -8,21 +8,23 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"QueueBot/internal/controller/telegram/messages"
 	"QueueBot/internal/entity"
 	"QueueBot/internal/usecase"
 )
 
-type Bot struct {
+const HelloMessage = `Привет! Я бот, предназначенный для создания очередей. 
+Введи описание своей очереди, а я тебе ее создам`
+
+type TelegramBot struct {
 	TgBot *tgbotapi.BotAPI
 	u     usecase.Bot
 }
 
-func NewAppBot(tgBot *tgbotapi.BotAPI, u usecase.Bot) *Bot {
-	return &Bot{TgBot: tgBot, u: u}
+func NewTelegramBot(tgBot *tgbotapi.BotAPI, u usecase.Bot) *TelegramBot {
+	return &TelegramBot{TgBot: tgBot, u: u}
 }
 
-func (b Bot) SendHelloMessage(message *tgbotapi.Message) error {
+func (b TelegramBot) SendHelloMessage(message *tgbotapi.Message) error {
 	msg := tgbotapi.NewMessage(message.Chat.ID, HelloMessage)
 
 	if _, err := b.TgBot.Send(msg); err != nil {
@@ -32,8 +34,8 @@ func (b Bot) SendHelloMessage(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b Bot) SendForwardMessageButton(message *tgbotapi.Message) error {
-	msg := messages.GetForwardMessage(message.Chat.ID, message.Text)
+func (b TelegramBot) SendForwardMessageButton(message *tgbotapi.Message) error {
+	msg := GetForwardMessage(message.Chat.ID, message.Text)
 	if _, err := b.TgBot.Send(msg); err != nil {
 		return fmt.Errorf("couldn't send forward to message in telegram with error: %w", err)
 	}
@@ -41,7 +43,7 @@ func (b Bot) SendForwardMessageButton(message *tgbotapi.Message) error {
 	return nil
 }
 
-func (b Bot) CreateQueue(ctx context.Context, messageID string, description string) error {
+func (b TelegramBot) CreateQueue(ctx context.Context, messageID string, description string) error {
 	if err := b.u.CreateQueue(ctx, messageID, description); err != nil {
 		return fmt.Errorf("couldn't create queue with error: %w", err)
 	}
@@ -51,7 +53,7 @@ func (b Bot) CreateQueue(ctx context.Context, messageID string, description stri
 	return nil
 }
 
-func (b Bot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
+func (b TelegramBot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
 	startTime := time.Now()
 
 	if err := b.u.LogInOutToQueue(
@@ -71,7 +73,7 @@ func (b Bot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQu
 
 	slog.Debug("Got queue", "elapsed", time.Since(startTime).String())
 
-	updatedMessage := messages.GetUpdatedQueueMessage(callbackQuery.InlineMessageID, queue.Description, queue.Users)
+	updatedMessage := GetUpdatedQueueMessage(callbackQuery.InlineMessageID, queue.Description, queue.Users)
 
 	slog.Debug("Got updated queue message", "elapsed", time.Since(startTime).String())
 
@@ -90,7 +92,7 @@ func (b Bot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQu
 	return nil
 }
 
-func (b Bot) Start(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery, isShuffled bool) error {
+func (b TelegramBot) Start(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery, isShuffled bool) error {
 	err := b.u.StartQueue(ctx, callbackQuery.InlineMessageID, isShuffled)
 	if err != nil {
 		return fmt.Errorf("couldn't start queue with error: %w", err)
@@ -101,7 +103,7 @@ func (b Bot) Start(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery, i
 	return b.sendQueueStatusMessage(ctx, callbackQuery)
 }
 
-func (b Bot) Next(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
+func (b TelegramBot) Next(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
 	err := b.u.SetNextPersonToQueue(ctx, callbackQuery.InlineMessageID)
 	if err != nil {
 		return fmt.Errorf("couldn't increment current person in queue %s with error: %w", callbackQuery.InlineMessageID, err)
@@ -112,13 +114,13 @@ func (b Bot) Next(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) er
 	return b.sendQueueStatusMessage(ctx, callbackQuery)
 }
 
-func (b Bot) GoToMenu(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
+func (b TelegramBot) GoToMenu(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
 	queue, err := b.u.GetQueue(ctx, callbackQuery.InlineMessageID)
 	if err != nil {
 		return fmt.Errorf("couldn't get queue with error: %w", err)
 	}
 
-	updatedMessage := messages.GetQueueMessage(callbackQuery.InlineMessageID, queue.Users, queue.Description)
+	updatedMessage := GetQueueMessage(callbackQuery.InlineMessageID, queue.Users, queue.Description)
 	_, err = b.TgBot.Request(updatedMessage)
 	if err != nil {
 		return fmt.Errorf("couldn't go to menu with error: %w", err)
@@ -129,8 +131,8 @@ func (b Bot) GoToMenu(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery
 	return nil
 }
 
-func (b Bot) FinishQueue(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
-	updatedMessage := messages.GetFinishedMessage(callbackQuery.InlineMessageID)
+func (b TelegramBot) FinishQueue(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
+	updatedMessage := GetFinishedMessage(callbackQuery.InlineMessageID)
 	_, err := b.TgBot.Request(updatedMessage)
 	if err != nil {
 		return fmt.Errorf("couldn't send finish queue with error: %w", err)
@@ -145,7 +147,7 @@ func (b Bot) FinishQueue(ctx context.Context, callbackQuery *tgbotapi.CallbackQu
 	return nil
 }
 
-func (b Bot) sendQueueStatusMessage(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
+func (b TelegramBot) sendQueueStatusMessage(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
 	queue, err := b.u.GetQueue(ctx, callbackQuery.InlineMessageID)
 	if err != nil {
 		return fmt.Errorf("couldn't get queue with error: %w", err)
@@ -153,9 +155,9 @@ func (b Bot) sendQueueStatusMessage(ctx context.Context, callbackQuery *tgbotapi
 
 	var updatedMessage tgbotapi.EditMessageTextConfig
 	if queue.CurrentPersonIdx == len(queue.Users) {
-		updatedMessage = messages.GetEndQueueMessage(callbackQuery.InlineMessageID)
+		updatedMessage = GetEndQueueMessage(callbackQuery.InlineMessageID)
 	} else {
-		updatedMessage = messages.GetQueueAfterStartMessage(callbackQuery.InlineMessageID, queue.Description, queue.Users, queue.CurrentPersonIdx)
+		updatedMessage = GetQueueAfterStartMessage(callbackQuery.InlineMessageID, queue.Description, queue.Users, queue.CurrentPersonIdx)
 	}
 
 	_, err = b.TgBot.Request(updatedMessage)

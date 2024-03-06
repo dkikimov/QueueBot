@@ -8,32 +8,37 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
-	"QueueBot/internal/controller/telegram/messages"
+	"QueueBot/internal/controller/telegram/client"
+)
+
+const (
+	ActionCompleted = "Действие выполнено!"
+	ActionError     = "Произошла ошибка"
 )
 
 func (s BotServer) handleCallbackData(callbackQuery *tgbotapi.CallbackQuery) error {
 	switch callbackQuery.Data {
-	case messages.LogInOurOutData:
+	case client.LogInOurOutData:
 		if err := s.bot.LogInOurOut(context.Background(), callbackQuery); err != nil {
 			return fmt.Errorf("couldn't login or logout with error: %w", err)
 		}
-	case messages.StartQueueData:
+	case client.StartQueueData:
 		if err := s.bot.Start(context.Background(), callbackQuery, false); err != nil {
 			return fmt.Errorf("couldn't start queue with error: %w", err)
 		}
-	case messages.StartQueueShuffleData:
+	case client.StartQueueShuffleData:
 		if err := s.bot.Start(context.Background(), callbackQuery, true); err != nil {
 			return fmt.Errorf("couldn't start queue with shuffle with error: %w", err)
 		}
-	case messages.NextData:
+	case client.NextData:
 		if err := s.bot.Next(context.Background(), callbackQuery); err != nil {
 			return fmt.Errorf("couldn't go to next person with error: %w", err)
 		}
-	case messages.GoToMenuData:
+	case client.GoToMenuData:
 		if err := s.bot.GoToMenu(context.Background(), callbackQuery); err != nil {
 			return fmt.Errorf("couldn't go to menu with error: %w", err)
 		}
-	case messages.FinishQueueData:
+	case client.FinishQueueData:
 		if err := s.bot.FinishQueue(context.Background(), callbackQuery); err != nil {
 			return fmt.Errorf("couldn't finish queue with error: %w", err)
 		}

@@ -9,6 +9,7 @@ import (
 
 	"QueueBot/config"
 	"QueueBot/internal/controller/telegram"
+	"QueueBot/internal/controller/telegram/client"
 	"QueueBot/internal/usecase"
 	"QueueBot/internal/usecase/storage/sqlite"
 )
@@ -47,7 +48,7 @@ func main() {
 	}(storage)
 
 	botUseCase := usecase.NewBotUseCase(storage)
-	bot := telegram.NewAppBot(botAPI, botUseCase)
+	bot := client.NewTelegramBot(botAPI, botUseCase)
 	server := telegram.NewBotServer(bot)
 
 	updateConfig := tgbotapi.NewUpdate(0)
