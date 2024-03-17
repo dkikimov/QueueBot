@@ -1,4 +1,4 @@
-package models
+package entity
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 )
 
 type User struct {
-	Id   int64
+	ID   int64
 	Name string
 }
 
 func New(id int64, lastName string, firstName string) User {
-	return User{Id: id, Name: strings.TrimSpace(strings.Join([]string{lastName, firstName}, " "))}
+	return User{ID: id, Name: strings.TrimSpace(strings.Join([]string{lastName, firstName}, " "))}
 }
 
 func ListToString(users []User) (result string) {
@@ -19,17 +19,19 @@ func ListToString(users []User) (result string) {
 	for _, user := range users {
 		sb.WriteString(user.Name + "\n")
 	}
+
 	return sb.String()
 }
 
-func ListToStringWithCurrent(users []User, currentUser int) (result string) {
+func ListToStringWithCurrent(users []User, currentUser int) string {
+	sb := strings.Builder{}
 	for idx, user := range users {
 		if currentUser == idx {
-			result += fmt.Sprintf("-> %s <-\n", user.Name)
+			sb.WriteString(fmt.Sprintf("-> %s <-\n", user.Name))
 		} else {
-			result += user.Name + "\n"
+			sb.WriteString(user.Name + "\n")
 		}
-
 	}
-	return result
+
+	return sb.String()
 }

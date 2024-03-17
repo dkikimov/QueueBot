@@ -3,12 +3,15 @@ package main
 import (
 	"log"
 	"log/slog"
+	"os"
 
-	tgBotApi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"QueueBot/config"
-	"QueueBot/internal/storage/sqlite"
-	"QueueBot/internal/telegram"
+	"QueueBot/internal/controller/telegram"
+	"QueueBot/internal/controller/telegram/client"
+	"QueueBot/internal/usecase"
+	"QueueBot/internal/usecase/storage/sqlite"
 )
 
 func main() {
@@ -17,30 +20,38 @@ func main() {
 		log.Fatalf("Couldn't create config: %s", err)
 	}
 
-	tgBot, err := tgBotApi.NewBotAPI(cfg.BotToken)
+	programLevel := new(slog.LevelVar)
+	if cfg.IsAppDebug {
+		programLevel.Set(slog.LevelDebug)
+	}
+
+	h := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
+	slog.SetDefault(slog.New(h))
+
+	botAPI, err := tgbotapi.NewBotAPI(cfg.BotToken)
 	if err != nil {
 		log.Fatalf("Couldn't initialize bot with error: %s", err.Error())
 	}
 
-	tgBot.Debug = cfg.IsDebug
+	botAPI.Debug = cfg.IsTelegramDebug
 
 	storage, err := sqlite.NewDatabase(cfg.DatabasePath)
 	if err != nil {
 		log.Fatalf("Couldn't initialize storage: %s", err)
 	}
 
-	defer func(storage *sqlite.SQLite) {
+	defer func(storage *sqlite.Database) {
 		err := storage.Close()
 		if err != nil {
 			log.Fatalf("couldn't close storage")
 		}
 	}(storage)
 
-	bot := telegram.NewAppBot(tgBot, storage)
-
+	botUseCase := usecase.NewBotUseCase(storage)
+	bot := client.NewTelegramBot(botAPI, botUseCase)
 	server := telegram.NewBotServer(bot)
 
-	updateConfig := tgBotApi.NewUpdate(0)
+	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 
 	errChan := make(chan error)
