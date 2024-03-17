@@ -4,8 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log/slog"
-
 	// Sqlite driver...
 	_ "github.com/mattn/go-sqlite3"
 
@@ -104,20 +102,12 @@ func updateParticipantsInorder(ctx context.Context, tx *sql.Tx, messageID string
                                                       (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id FROM participants WHERE message_id = ?)
                                                           AS sub WHERE participants.user_id = sub.user_id AND message_id = ?`)
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("couldn't rollback transaction in StartQueue", "reason", err, "isShuffle", false)
-		}
-
 		return fmt.Errorf("couldn't prepare shuffle statement: %w", err)
 	}
 	defer startStmt.Close()
 
 	_, err = startStmt.ExecContext(ctx, messageID, messageID)
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("couldn't rollback transaction in StartQueue", "reason", err, "isShuffle", false)
-		}
-
 		return fmt.Errorf("couldn't start queue: %w", err)
 	}
 
@@ -129,20 +119,12 @@ func updateParticipantsShuffle(ctx context.Context, tx *sql.Tx, messageID string
 														SET order_number = random()
 														WHERE message_id = ?;`)
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("couldn't rollback transaction in StartQueue", "reason", err, "isShuffle", true)
-		}
-
 		return fmt.Errorf("couldn't prepare inorder queue start statement: %w", err)
 	}
 	defer startStmt.Close()
 
 	_, err = startStmt.ExecContext(ctx, messageID)
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("couldn't rollback transaction in StartQueue", "reason", err, "isShuffle", true)
-		}
-
 		return fmt.Errorf("couldn't start queue: %w", err)
 	}
 
@@ -154,23 +136,16 @@ func (s Database) StartQueue(ctx context.Context, messageID string, isShuffle bo
 	if err != nil {
 		return fmt.Errorf("couldn't begin transaction: %w", err)
 	}
+	defer tx.Rollback()
 
 	setCurrentUserIndexStmt, err := tx.PrepareContext(ctx, "UPDATE queues SET current_user_index = 0 WHERE message_id = ?")
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("couldn't rollback transaction in StartQueue", "reason", err)
-		}
-
 		return fmt.Errorf("couldn't prepare set current user index statement: %w", err)
 	}
 	defer setCurrentUserIndexStmt.Close()
 
 	_, err = setCurrentUserIndexStmt.ExecContext(ctx, messageID)
 	if err != nil {
-		if err := tx.Rollback(); err != nil {
-			slog.Error("couldn't rollback transaction in StartQueue", "reason", err)
-		}
-
 		return fmt.Errorf("couldn't set current user index: %w", err)
 	}
 
@@ -210,6 +185,7 @@ func (s Database) DeleteQueue(ctx context.Context, messageID string) error {
 	if err != nil {
 		return fmt.Errorf("couldn't begin transaction: %w", err)
 	}
+	defer tx.Rollback()
 
 	deleteQueueStmt, err := tx.PrepareContext(ctx, "DELETE FROM queues WHERE message_id = ?")
 	if err != nil {
