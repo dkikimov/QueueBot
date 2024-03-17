@@ -399,13 +399,13 @@ func TestDatabase_StartQueue(t *testing.T) {
 
 				mock.ExpectPrepare(`UPDATE participants SET order_number = dense_rank FROM 
                                                       (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id 
-                                                       FROM participants WHERE message_id = ?) AS sub WHERE participants.user_id = sub.user_id 
-                                                                                                        AND message_id = ?`).WillBeClosed()
+                                                       FROM participants WHERE message_id = $1) AS sub WHERE participants.user_id = sub.user_id 
+                                                                                                        AND message_id = $1`).WillBeClosed()
 				mock.ExpectExec(`UPDATE participants SET order_number = dense_rank FROM 
                                                       (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id 
-                                                       FROM participants WHERE message_id = ?) AS sub WHERE participants.user_id = sub.user_id 
-                                                                                                        AND message_id = ?`).
-					WithArgs(args.messageID, args.messageID).
+                                                       FROM participants WHERE message_id = $1) AS sub WHERE participants.user_id = sub.user_id 
+                                                                                                        AND message_id = $1`).
+					WithArgs(args.messageID).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 
 				mock.ExpectCommit()
@@ -520,6 +520,7 @@ func Test_updateParticipantsInorder(t *testing.T) {
 
 	type args struct {
 		messageID string
+		isShuffle bool
 	}
 
 	type mockBehaviour func(args args)
@@ -531,9 +532,10 @@ func Test_updateParticipantsInorder(t *testing.T) {
 		wantErr       bool
 	}{
 		{
-			name: "OK",
+			name: "OK direct order",
 			args: args{
 				messageID: "123",
+				isShuffle: false,
 			},
 			mockBehaviour: func(args args) {
 				mock.ExpectBegin()
@@ -541,22 +543,23 @@ func Test_updateParticipantsInorder(t *testing.T) {
 				mock.ExpectPrepare(`UPDATE participants
 														SET order_number = dense_rank FROM 
 														(SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id 
-														FROM participants WHERE message_id = ?) AS sub WHERE participants.user_id = sub.user_id 
-														AND message_id = ?`).WillBeClosed()
+														FROM participants WHERE message_id = $1) AS sub WHERE participants.user_id = sub.user_id 
+														AND message_id = $1`).WillBeClosed()
 				mock.ExpectExec(`UPDATE participants
 														SET order_number = dense_rank FROM 
 														(SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id 
-														FROM participants WHERE message_id = ?) AS sub WHERE participants.user_id = sub.user_id 
-														AND message_id = ?`).
-					WithArgs(args.messageID, args.messageID).
+														FROM participants WHERE message_id = $1) AS sub WHERE participants.user_id = sub.user_id 
+														AND message_id = $1`).
+					WithArgs(args.messageID).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			wantErr: false,
 		},
 		{
-			name: "Unknown message ID",
+			name: "Unknown message ID direct order",
 			args: args{
 				messageID: "1234",
+				isShuffle: false,
 			},
 			mockBehaviour: func(args args) {
 				mock.ExpectBegin()
@@ -564,57 +567,23 @@ func Test_updateParticipantsInorder(t *testing.T) {
 				mock.ExpectPrepare(`UPDATE participants
 														SET order_number = dense_rank FROM 
 														(SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id 
-														FROM participants WHERE message_id = ?) AS sub WHERE participants.user_id = sub.user_id 
-														AND message_id = ?`).WillBeClosed()
+														FROM participants WHERE message_id = $1) AS sub WHERE participants.user_id = sub.user_id 
+														AND message_id = $1`).WillBeClosed()
 				mock.ExpectExec(`UPDATE participants
 														SET order_number = dense_rank FROM 
 														(SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id 
-														FROM participants WHERE message_id = ?) AS sub WHERE participants.user_id = sub.user_id 
-														AND message_id = ?`).
-					WithArgs(args.messageID, args.messageID).
+														FROM participants WHERE message_id = $1) AS sub WHERE participants.user_id = sub.user_id 
+														AND message_id = $1`).
+					WithArgs(args.messageID).
 					WillReturnError(errReference)
 			},
 			wantErr: true,
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.mockBehaviour(tt.args)
-
-			tx, err := db.db.BeginTx(context.Background(), &sql.TxOptions{})
-			assert.NoError(t, err)
-
-			if err := updateParticipantsInorder(context.Background(), tx, tt.args.messageID); (err != nil) != tt.wantErr {
-				t.Errorf("updateParticipantsInorder() error = %v, wantErr %v", err, tt.wantErr)
-			}
-
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
-	}
-}
-
-func Test_updateParticipantsShuffle(t *testing.T) {
-	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-	assert.NoError(t, err)
-
-	db := NewDatabaseFromDB(mockDB)
-
-	type args struct {
-		messageID string
-	}
-
-	type mockBehaviour func(args args)
-
-	tests := []struct {
-		name          string
-		args          args
-		mockBehaviour mockBehaviour
-		wantErr       bool
-	}{
 		{
-			name: "OK",
+			name: "OK Shuffle",
 			args: args{
 				messageID: "123",
+				isShuffle: true,
 			},
 			mockBehaviour: func(args args) {
 				mock.ExpectBegin()
@@ -627,9 +596,10 @@ func Test_updateParticipantsShuffle(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "Unknown message ID",
+			name: "Unknown message ID shuffle",
 			args: args{
 				messageID: "1234",
+				isShuffle: true,
 			},
 			mockBehaviour: func(args args) {
 				mock.ExpectBegin()
@@ -649,8 +619,8 @@ func Test_updateParticipantsShuffle(t *testing.T) {
 			tx, err := db.db.BeginTx(context.Background(), &sql.TxOptions{})
 			assert.NoError(t, err)
 
-			if err := updateParticipantsShuffle(context.Background(), tx, tt.args.messageID); (err != nil) != tt.wantErr {
-				t.Errorf("updateParticipantsShuffle() error = %v, wantErr %v", err, tt.wantErr)
+			if err := setParticipantsOrder(context.Background(), tx, tt.args.messageID, tt.args.isShuffle); (err != nil) != tt.wantErr {
+				t.Errorf("setParticipantsOrder() error = %v, wantErr %v", err, tt.wantErr)
 			}
 
 			assert.NoError(t, mock.ExpectationsWereMet())
