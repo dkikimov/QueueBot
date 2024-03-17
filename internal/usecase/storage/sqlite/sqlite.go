@@ -33,7 +33,7 @@ func (s Database) CreateQueue(ctx context.Context, messageID string, description
 
 func (s Database) LogInOutToQueue(ctx context.Context, messageID string, user entity.User) error {
 	logInOutStmt, err := s.db.PrepareContext(ctx, `INSERT INTO participants(message_id, user_id, user_name)
-	VALUES (?, ?, ?) on conflict do update set isDeleted=not isDeleted, joined_at=CURRENT_TIMESTAMP;`)
+	VALUES (?, ?, ?) on conflict do update set isDeleted=not isDeleted, joined_at=CURRENT_TIMESTAMP`)
 	if err != nil {
 		return fmt.Errorf("couldn't prepare log in/out to queue statement: %w", err)
 	}
@@ -56,8 +56,7 @@ func (s Database) GetQueue(ctx context.Context, messageID string) (entity.Queue,
 
 	getUsersStmt, err := s.db.PrepareContext(
 		ctx,
-		`SELECT user_id, user_name FROM participants WHERE message_id = ? and isDeleted = 0 
-                                            			 ORDER BY order_number`,
+		"SELECT user_id, user_name FROM participants WHERE message_id = ? and isDeleted = 0 ORDER BY order_number",
 	)
 	if err != nil {
 		return entity.Queue{}, fmt.Errorf("couldn't prepare get queue users statement: %w", err)
@@ -99,29 +98,20 @@ func (s Database) GetQueue(ctx context.Context, messageID string) (entity.Queue,
 	}, nil
 }
 
-func updateParticipantsInorder(ctx context.Context, tx *sql.Tx, messageID string) error {
-	startStmt, err := tx.PrepareContext(ctx, `UPDATE participants SET order_number = dense_rank FROM 
-                                                      (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id FROM participants WHERE message_id = ?)
-                                                          AS sub WHERE participants.user_id = sub.user_id AND message_id = ?`)
-	if err != nil {
-		return fmt.Errorf("couldn't prepare shuffle statement: %w", err)
-	}
-	defer startStmt.Close()
-
-	_, err = startStmt.ExecContext(ctx, messageID, messageID)
-	if err != nil {
-		return fmt.Errorf("couldn't start queue: %w", err)
-	}
-
-	return nil
-}
-
-func updateParticipantsShuffle(ctx context.Context, tx *sql.Tx, messageID string) error {
-	startStmt, err := tx.PrepareContext(ctx, `UPDATE participants
+func setParticipantsOrder(ctx context.Context, tx *sql.Tx, messageID string, isShuffle bool) (err error) {
+	var startStmt *sql.Stmt
+	if isShuffle {
+		startStmt, err = tx.PrepareContext(ctx, `UPDATE participants
 														SET order_number = random()
 														WHERE message_id = ?;`)
+	} else {
+		startStmt, err = tx.PrepareContext(ctx, `UPDATE participants SET order_number = dense_rank FROM 
+                                                      (SELECT dense_rank() OVER (ORDER BY joined_at) AS dense_rank, user_id FROM participants WHERE message_id = $1)
+                                                          AS sub WHERE participants.user_id = sub.user_id AND message_id = $1`)
+	}
+
 	if err != nil {
-		return fmt.Errorf("couldn't prepare inorder queue start statement: %w", err)
+		return fmt.Errorf("couldn't prepare shuffle statement: %w", err)
 	}
 	defer startStmt.Close()
 
@@ -141,28 +131,37 @@ func (s Database) StartQueue(ctx context.Context, messageID string, isShuffle bo
 
 	setCurrentUserIndexStmt, err := tx.PrepareContext(ctx, "UPDATE queues SET current_user_index = 0 WHERE message_id = ?")
 	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't prepare set current user index statement: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't prepare set current user index statement: %w", err)
 	}
 	defer setCurrentUserIndexStmt.Close()
 
 	_, err = setCurrentUserIndexStmt.ExecContext(ctx, messageID)
 	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't set current user index: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't set current user index: %w", err)
 	}
 
-	if !isShuffle {
-		err := updateParticipantsShuffle(ctx, tx, messageID)
-		if err != nil {
-			return fmt.Errorf("couldn't update participant in shuffle order: %w", err)
+	err = setParticipantsOrder(ctx, tx, messageID, isShuffle)
+	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't update participant in shuffle order: %w, unable to rollback: %w", err, txErr)
 		}
-	} else {
-		err := updateParticipantsInorder(ctx, tx, messageID)
-		if err != nil {
-			return fmt.Errorf("couldn't update participant inorder: %w", err)
-		}
+
+		return fmt.Errorf("couldn't update participant in shuffle order: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't commit transaction: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't commit transaction: %w", err)
 	}
 
@@ -189,27 +188,47 @@ func (s Database) DeleteQueue(ctx context.Context, messageID string) error {
 
 	deleteQueueStmt, err := tx.PrepareContext(ctx, "DELETE FROM queues WHERE message_id = ?")
 	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't prepare finish queue statement: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't prepare finish queue statement: %w", err)
 	}
 	defer deleteQueueStmt.Close()
 
 	_, err = deleteQueueStmt.ExecContext(ctx, messageID)
 	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't finish queue: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't finish queue: %w", err)
 	}
 
 	deleteParticipantsStmt, err := tx.PrepareContext(ctx, "DELETE FROM participants WHERE message_id = ?")
 	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't prepare delete participants statement: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't prepare delete participants statement: %w", err)
 	}
 	defer deleteParticipantsStmt.Close()
 
 	_, err = deleteParticipantsStmt.ExecContext(ctx, messageID)
 	if err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't delete participants: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't delete participants: %w", err)
 	}
 
 	if err = tx.Commit(); err != nil {
+		if txErr := tx.Rollback(); txErr != nil {
+			return fmt.Errorf("couldn't commit transaction: %w, unable to rollback: %w", err, txErr)
+		}
+
 		return fmt.Errorf("couldn't commit transaction: %w", err)
 	}
 
@@ -229,4 +248,10 @@ func NewDatabase(databasePath string) (*Database, error) {
 	return &Database{
 		db: db,
 	}, nil
+}
+
+func NewDatabaseFromDB(db *sql.DB) *Database {
+	return &Database{
+		db: db,
+	}
 }
