@@ -17,11 +17,21 @@ const (
 )
 
 func getMessageContentBeforeStart(title string, users []entity.User) string {
-	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, entity.ListToString(users))
+	return fmt.Sprintf(
+		"*%s*\n%s\n%s",
+		title,
+		QueueDescription,
+		cutStringByLines(entity.ListToString(users), 26),
+	)
 }
 
 func getMessageContentAfterStart(title string, users []entity.User, currentPersonIndex int) string {
-	return fmt.Sprintf("*%s*\n%s\n%s", title, QueueDescription, entity.ListToStringWithCurrent(users, currentPersonIndex))
+	return fmt.Sprintf(
+		"*%s*\n%s\n%s",
+		title,
+		QueueDescription,
+		cutStringByLinesWithCurrent(entity.ListToStringWithCurrent(users, currentPersonIndex), 13, currentPersonIndex),
+	)
 }
 
 func GetQueueMessageContent(description string) tgbotapi.InputTextMessageContent {
