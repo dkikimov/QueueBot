@@ -16,8 +16,11 @@ func New(id int64, lastName string, firstName string) User {
 
 func ListToString(users []User) (result string) {
 	sb := strings.Builder{}
-	for _, user := range users {
-		sb.WriteString(user.Name + "\n")
+	for i, user := range users {
+		sb.WriteString(user.Name)
+		if i < len(users)-1 {
+			sb.WriteByte('\n')
+		}
 	}
 
 	return sb.String()
@@ -27,9 +30,13 @@ func ListToStringWithCurrent(users []User, currentUser int) string {
 	sb := strings.Builder{}
 	for idx, user := range users {
 		if currentUser == idx {
-			sb.WriteString(fmt.Sprintf("-> %s <-\n", user.Name))
+			sb.WriteString(fmt.Sprintf("-> %s <-", user.Name))
 		} else {
-			sb.WriteString(user.Name + "\n")
+			sb.WriteString(user.Name)
+		}
+
+		if idx < len(users)-1 {
+			sb.WriteByte('\n')
 		}
 	}
 
