@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
@@ -11,7 +13,8 @@ import (
 	"QueueBot/internal/controller/telegram"
 	"QueueBot/internal/controller/telegram/client"
 	"QueueBot/internal/usecase"
-	"QueueBot/internal/usecase/storage/sqlite"
+	"QueueBot/internal/usecase/storage"
+	"QueueBot/internal/usecase/storage/mongodb"
 )
 
 func main() {
@@ -35,19 +38,22 @@ func main() {
 
 	botAPI.Debug = cfg.IsTelegramDebug
 
-	storage, err := sqlite.NewDatabase(cfg.DatabasePath)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	repository, err := mongodb.NewDatabase(timeoutCtx, cfg.DatabasePath)
 	if err != nil {
-		log.Fatalf("Couldn't initialize storage: %s", err)
+		log.Fatalf("Couldn't initialize repository: %s", err)
 	}
 
-	defer func(storage *sqlite.Database) {
+	defer func(storage storage.Storage) {
 		err := storage.Close()
 		if err != nil {
-			log.Fatalf("couldn't close storage")
+			log.Fatalf("couldn't close repository")
 		}
-	}(storage)
+	}(repository)
 
-	botUseCase := usecase.NewBotUseCase(storage)
+	botUseCase := usecase.NewBotUseCase(repository)
 	bot := client.NewTelegramBot(botAPI, botUseCase)
 	server := telegram.NewBotServer(bot)
 

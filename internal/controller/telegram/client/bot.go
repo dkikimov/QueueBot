@@ -2,12 +2,14 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
+	"QueueBot/internal/apperrors"
 	"QueueBot/internal/entity"
 	"QueueBot/internal/usecase"
 )
@@ -56,12 +58,24 @@ func (b TelegramBot) CreateQueue(ctx context.Context, messageID string, descript
 func (b TelegramBot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.CallbackQuery) error {
 	startTime := time.Now()
 
-	if err := b.u.LogInOutToQueue(
+	err := b.u.LogInOutToQueue(
 		ctx,
 		callbackQuery.InlineMessageID,
 		entity.New(callbackQuery.From.ID, callbackQuery.From.LastName, callbackQuery.From.FirstName),
-	); err != nil {
-		return fmt.Errorf("couldn't add user to queue with error: %w", err)
+	)
+
+	if err != nil {
+		var callbackError *apperrors.CallbackError
+		if errors.As(err, &callbackError) {
+			callback := tgbotapi.NewCallback(callbackQuery.ID, callbackError.Message)
+			_, err := b.TgBot.Request(callback)
+			if err != nil {
+				return fmt.Errorf("couldn't send callback with message %s error: %w", callbackError.Message, err)
+			}
+
+		} else {
+			return fmt.Errorf("couldn't add user to queue with error: %w", err)
+		}
 	}
 
 	slog.Debug("Logged in/out locally", "elapsed", time.Since(startTime).String())
