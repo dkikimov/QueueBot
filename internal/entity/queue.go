@@ -1,8 +1,8 @@
 package entity
 
 type Queue struct {
-	MessageID        string `bson:"message_id"`
+	MessageID        string `bson:"messageId"`
 	Description      string `bson:"description"`
 	Users            []User `bson:"users"`
-	CurrentPersonIdx int    `bson:"current_user_index"`
+	CurrentPersonIdx int    `bson:"currentUserIndex"`
 }

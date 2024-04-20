@@ -72,7 +72,6 @@ func (b TelegramBot) LogInOurOut(ctx context.Context, callbackQuery *tgbotapi.Ca
 			if err != nil {
 				return fmt.Errorf("couldn't send callback with message %s error: %w", callbackError.Message, err)
 			}
-
 		} else {
 			return fmt.Errorf("couldn't add user to queue with error: %w", err)
 		}

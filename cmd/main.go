@@ -38,12 +38,12 @@ func main() {
 
 	botAPI.Debug = cfg.IsTelegramDebug
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
 	repository, err := mongodb.NewDatabase(timeoutCtx, cfg.DatabasePath)
 	if err != nil {
-		log.Fatalf("Couldn't initialize repository: %s", err)
+		log.Panicf("Couldn't initialize repository: %s", err)
 	}
 
 	defer func(storage storage.Storage) {

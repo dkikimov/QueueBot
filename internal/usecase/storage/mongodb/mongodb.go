@@ -3,6 +3,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"sync"
 	"time"
@@ -22,8 +23,8 @@ type Database struct {
 
 func (db *Database) IncrementCurrentPerson(ctx context.Context, messageID string) error {
 	collection := db.mongoClient.Database("queue-bot").Collection("queues")
-	filter := bson.D{{"message_id", messageID}}
-	update := bson.D{{"$inc", bson.D{{"current_user_index", 1}}}}
+	filter := bson.D{{Key: "messageId", Value: messageID}}
+	update := bson.D{{Key: "$inc", Value: bson.D{{Key: "currentUserIndex", Value: 1}}}}
 
 	_, err := collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -35,7 +36,7 @@ func (db *Database) IncrementCurrentPerson(ctx context.Context, messageID string
 
 func (db *Database) DeleteQueue(ctx context.Context, messageID string) error {
 	collection := db.mongoClient.Database("queue-bot").Collection("queues")
-	filter := bson.D{{"message_id", messageID}}
+	filter := bson.D{{Key: "messageId", Value: messageID}}
 
 	_, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
@@ -48,10 +49,10 @@ func (db *Database) DeleteQueue(ctx context.Context, messageID string) error {
 func (db *Database) CreateQueue(ctx context.Context, messageID string, description string) error {
 	collection := db.mongoClient.Database("queue-bot").Collection("queues")
 	queue := bson.D{
-		{"message_id", messageID},
-		{"description", description},
-		{"current_user_index", 0},
-		{"users", []entity.User{}},
+		{Key: "messageId", Value: messageID},
+		{Key: "description", Value: description},
+		{Key: "currentUserIndex", Value: 0},
+		{Key: "users", Value: []entity.User{}},
 	}
 
 	_, err := collection.InsertOne(ctx, queue)
@@ -75,10 +76,10 @@ func (db *Database) LogInOutToQueue(ctx context.Context, messageID string, user 
 
 	callback := func(sessionContext mongo.SessionContext) error {
 		collection := db.mongoClient.Database("queue-bot").Collection("queues")
-		filter := bson.D{{"message_id", messageID}}
+		filter := bson.D{{Key: "messageId", Value: messageID}}
 
 		add := bson.D{
-			{"$addToSet", bson.D{{"users", user}}},
+			{Key: "$addToSet", Value: bson.D{{Key: "users", Value: user}}},
 		}
 
 		addResult, err := collection.UpdateOne(sessionContext, filter, add)
@@ -91,7 +92,7 @@ func (db *Database) LogInOutToQueue(ctx context.Context, messageID string, user 
 		}
 
 		remove := bson.D{
-			{"$pull", bson.D{{"users", bson.D{{"id", user.ID}}}}},
+			{Key: "$pull", Value: bson.D{{Key: "users", Value: bson.D{{Key: "id", Value: user.ID}}}}},
 		}
 
 		_, err = collection.UpdateOne(sessionContext, filter, remove)
@@ -112,7 +113,7 @@ func (db *Database) LogInOutToQueue(ctx context.Context, messageID string, user 
 
 func (db *Database) GetQueue(ctx context.Context, messageID string) (entity.Queue, error) {
 	collection := db.mongoClient.Database("queue-bot").Collection("queues")
-	filter := bson.D{{"message_id", messageID}}
+	filter := bson.D{{Key: "messageId", Value: messageID}}
 
 	var queue entity.Queue
 	err := collection.FindOne(ctx, filter).Decode(&queue)
@@ -128,11 +129,11 @@ func (db *Database) StartQueue(ctx context.Context, messageID string, isShuffle 
 	defer db.queueMutex.Delete(messageID)
 
 	collection := db.mongoClient.Database("queue-bot").Collection("queues")
-	filter := bson.D{{"message_id", messageID}}
+	filter := bson.D{{Key: "messageId", Value: messageID}}
 
 	if !isShuffle {
 		update := bson.D{
-			{"$set", bson.D{{"current_user_index", 0}}},
+			{Key: "$set", Value: bson.D{{Key: "currentUserIndex", Value: 0}}},
 		}
 
 		_, err := collection.UpdateOne(ctx, filter, update)
@@ -156,9 +157,9 @@ func (db *Database) StartQueue(ctx context.Context, messageID string, isShuffle 
 
 	update := bson.D{
 		{
-			"$set", bson.D{
-				{"current_user_index", 0},
-				{"users", queue.Users},
+			Key: "$set", Value: bson.D{
+				{Key: "currentUserIndex", Value: 0},
+				{Key: "users", Value: queue.Users},
 			},
 		},
 	}
@@ -176,6 +177,25 @@ func (db *Database) Close() error {
 	return db.mongoClient.Disconnect(context.Background())
 }
 
+func (db *Database) EnsureIndexes(ctx context.Context) error {
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "messageId", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+
+	collection := db.mongoClient.Database("queue-bot").Collection("queues")
+	_, err := collection.Indexes().CreateOne(
+		ctx,
+		indexModel,
+	)
+
+	if err != nil {
+		return fmt.Errorf("couldn't create index: %w", err)
+	}
+
+	return nil
+}
+
 func NewDatabase(ctx context.Context, connectString string) (*Database, error) {
 	connect, err := mongo.Connect(ctx, options.Client().ApplyURI(connectString))
 	if err != nil {
@@ -185,18 +205,13 @@ func NewDatabase(ctx context.Context, connectString string) (*Database, error) {
 	if err := connect.Ping(ctx, nil); err != nil {
 		return nil, fmt.Errorf("couldn't ping to database: %w", err)
 	}
+	slog.Info("Connected to MongoDB")
 
-	mongoDb := &Database{mongoClient: connect}
-
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{"message_id", 1}},
-		Options: options.Index().SetUnique(true),
-	}
-
-	_, err = mongoDb.mongoClient.Database("queue-bot").Collection("queues").Indexes().CreateOne(ctx, indexModel)
+	mongoDB := &Database{mongoClient: connect}
+	err = mongoDB.EnsureIndexes(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't create index: %w", err)
+		return nil, fmt.Errorf("couldn't ensure indexes: %w", err)
 	}
 
-	return mongoDb, nil
+	return mongoDB, nil
 }
