@@ -65,7 +65,7 @@ func main() {
 	go server.Listen(updateConfig, errChan)
 
 	for err := range errChan {
-		if err != nil {
+		if err != nil && len(err.Error()) != 0 {
 			slog.Error(err.Error())
 		}
 	}

@@ -6,6 +6,10 @@ type CallbackError struct {
 }
 
 func (c CallbackError) Error() string {
+	if c.Err == nil {
+		return ""
+	}
+
 	return c.Err.Error()
 }
 
